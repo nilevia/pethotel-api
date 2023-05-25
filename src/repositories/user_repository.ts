@@ -6,6 +6,7 @@ export type User = {
     id?: string,
     name: string,
     email: string,
+    phone?: string,
     created_at?: Date,
     updated_at?: Date,
 }
@@ -28,13 +29,6 @@ export const createUser = (values: User) => {
         data: values
     });
 }
-
-export const getUserBySessionToken = (session_token: string) => prisma.authentication.findFirst({
-    where: {
-        session_token: session_token,
-        ref_table: AuthRole.USER,
-    }
-})
 
 export const deleteUserById = (id: string) => prisma.user.delete({
     where: {

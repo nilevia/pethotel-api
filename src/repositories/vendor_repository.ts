@@ -41,12 +41,6 @@ export const createVendor = (values: Vendor) => {
     });
 }
 
-export const getVendorBySessionToken = (session_token: string) => prisma.authentication.findFirst({
-    where: {
-        session_token: session_token,
-        ref_table:  AuthRole.VENDOR,
-    }
-})
 
 export const deleteVendorById = (id: string) => prisma.vendor.delete({
     where: {

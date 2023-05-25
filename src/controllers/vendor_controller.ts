@@ -1,5 +1,6 @@
 import {Request, Response} from "express";
 import {deleteVendorById, getVendorById, getVendors, updateVendorById} from "../repositories/vendor_repository";
+import {createUser} from "../repositories/user_repository";
 
 export const getAllVendors = async (req: Request, res: Response) => {
     try {
