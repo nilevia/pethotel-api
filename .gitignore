@@ -212,7 +212,7 @@ instance/
 .webassets-cache
 
 # Environments
-.env
+#.env
 .venv
 env/
 venv/
