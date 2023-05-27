@@ -248,13 +248,17 @@ export default class AuthenticationController {
 
     public async onGoogle(req: Request, res: Response, next: NextFunction) {
         try {
-            const user = await UserRepository.getUserByEmail('alpinnz@gmail.com');
+            let user = await UserRepository.getUserByEmail('alpinnz@gmail.com');
 
             if (!user) {
-                throw new BaseError({
-                    name: BaseErrorArgsName.Unauthorized,
-                    message: "user not found"
-                });
+                user = await UserRepository.createUser({
+                    email: 'alpinnz@gmail.com',
+                    name: 'Alfin Noviaji',
+                })
+                // throw new BaseError({
+                //     name: BaseErrorArgsName.Unauthorized,
+                //     message: "user not found"
+                // });
             }
 
 
