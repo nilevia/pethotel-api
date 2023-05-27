@@ -13,8 +13,7 @@ export class Firebase {
 
     public async verifyIdToken(token: string): Promise<DecodedIdToken> {
         try {
-            const decoded: DecodedIdToken = await getAuth().verifyIdToken(token);
-            return decoded;
+            return await getAuth().verifyIdToken(token);
         } catch (error) {
             throw error;
         }

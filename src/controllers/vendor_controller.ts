@@ -39,6 +39,13 @@ export const deleteVendor = async (req: Request, res: Response, next: NextFuncti
 
         const vendor = await Repository.getVendorById(id);
 
+        if (!vendor) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: 'Vendor not found',
+            })
+        }
+
         const deletedVendor = await Repository.deleteVendorById(id);
 
         res.status(200).json(deletedVendor);

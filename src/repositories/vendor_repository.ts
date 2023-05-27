@@ -32,15 +32,13 @@ export const getVendorByEmail = async (email: string): Promise<Vendor | null> =>
 
         if (!result) return null;
 
-        const data: Vendor = {
+        return {
             ...result,
             email: result!.email,
             hotel_name: result!.hotel_name,
             password: result!.password,
             salt: result!.salt,
         };
-
-        return data;
     } catch (error) {
         throw error;
     }
@@ -56,15 +54,13 @@ export const getVendorById = async (id: string): Promise<Vendor | null> => {
 
         if (!result) return null;
 
-        const data: Vendor = {
+        return {
             ...result,
             email: result!.email,
             hotel_name: result!.hotel_name,
             password: result!.password,
             salt: result!.salt,
         };
-
-        return data;
     } catch (error) {
         throw error;
     }
@@ -99,15 +95,13 @@ export const updateVendorById = async (id: string, values: Vendor): Promise<Vend
 
         if (!result) return null;
 
-        const data: Vendor = {
+        return {
             ...result,
             email: result!.email,
             hotel_name: result!.hotel_name,
             password: result!.password,
             salt: result!.salt,
         };
-
-        return data;
     } catch (error) {
         throw error;
     }

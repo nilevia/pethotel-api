@@ -1,5 +1,4 @@
 import {Request} from "express";
-import {ExpressValidator, CustomSchema} from 'express-validator';
 import {ResultWithContext} from "express-validator/src/chain";
 import {checkSchema, Schema, ValidationError} from "express-validator";
 import {FieldInstance} from "express-validator/src/base";

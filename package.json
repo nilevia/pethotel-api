@@ -24,8 +24,7 @@
     "express-validator": "^7.0.1",
     "firebase-admin": "^11.8.0",
     "google-auth-library": "^8.8.0",
-    "lodash": "^4.17.21",
-    "node-static": "^0.7.11"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/compression": "^1.7.2",

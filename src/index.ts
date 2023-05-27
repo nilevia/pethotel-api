@@ -10,7 +10,6 @@ import {ResponseError} from "./exceptions/response";
 import {BaseError, HttpCode} from "./exceptions/base_error";
 import {Firebase} from "./libraries/firebase";
 import * as path from "path";
-import nStatic from 'node-static';
 import * as process from "process";
 import * as console from "console";
 
