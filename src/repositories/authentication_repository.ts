@@ -1,33 +1,61 @@
 import prisma from "../prisma";
-import {AuthRole} from "../middlewares";
+import {authentication} from "@prisma/client";
 
 
 export type Authentication = {
     id?: string,
     ref_id: string,
     ref_table: string,
-    session_token: string,
+    token: string,
     created_at?: Date,
     updated_at?: Date,
 }
 
-export const getAuthenticationByToken = (session_token: string) => prisma.authentication.findFirst({
-    where: {
-        session_token: session_token,
-    },
-})
+export const getAuthenticationByToken = async (token: string): Promise<Authentication | null> => {
+    try {
+        const result: authentication | null = await prisma.authentication.findFirst({
+            where: {
+                token: token
+            }
+        })
 
-export const getAuthenticationByTokenUser = (session_token: string) => prisma.authentication.findFirst({
-    where: {
-        session_token: session_token,
-        ref_table: AuthRole.USER,
-    },
-})
+        if (result === null) return null;
 
-export const getAuthenticationByTokenVendor = (session_token: string) => prisma.authentication.findFirst({
-    where: {
-        session_token: session_token,
-        ref_table: AuthRole.VENDOR,
-    },
-})
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteAuthenticationByToken = async (token: string): Promise<Authentication | null> => {
+    try {
+        const result: authentication | null = await prisma.authentication.delete({
+            where: {
+                token: token
+            }
+        })
+
+        if (result === null) return null;
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const createAuthentication = async (values: Authentication): Promise<Authentication | null> => {
+    try {
+        const result: authentication | null = await prisma.authentication.create({
+            data: values
+        })
+
+        if (result === null) return null;
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+
 

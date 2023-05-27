@@ -1,4 +1,4 @@
-import {initializeApp, App, cert} from 'firebase-admin/app';
+import {App, cert, initializeApp} from 'firebase-admin/app';
 import {getAuth} from 'firebase-admin/auth';
 import {DecodedIdToken} from "firebase-admin/lib/auth/token-verifier";
 

@@ -13,7 +13,7 @@ datasource db {
 model user {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   name       String
-  email      String
+  email      String   @unique
   phone      String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -22,7 +22,7 @@ model user {
 model vendor {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   hotel_name  String
-  email       String
+  email       String   @unique
   password    String
   salt        String
   logo_url    String?
@@ -41,12 +41,12 @@ model vendor {
 }
 
 model authentication {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  ref_id        String
-  ref_table     String
-  session_token String
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  ref_id     String
+  ref_table  String
+  token      String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model media {

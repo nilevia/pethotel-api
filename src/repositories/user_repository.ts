@@ -1,5 +1,4 @@
 import prisma from "../prisma";
-import {AuthRole} from "../middlewares";
 
 
 export type User = {

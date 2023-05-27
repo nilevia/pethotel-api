@@ -1,14 +1,15 @@
-import {Router} from 'express';
-import authentication from './authentication';
-import users from "./user";
-import vendor from "./vendor";
+import express from 'express';
+import AuthenticationRouter from "./authentication_router";
+import VendorRouter from "./vendor_router";
+import UploadRouter from "./upload_router";
 
-const router: Router = Router();
+export default class Router {
+    public readonly router: express.Router;
 
-export default (): Router => {
-    authentication(router);
-    users(router);
-    vendor(router);
-
-    return router;
+    constructor() {
+        this.router = express.Router();
+        new AuthenticationRouter(this.router);
+        new VendorRouter(this.router)
+        new UploadRouter(this.router);
+    }
 }

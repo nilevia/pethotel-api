@@ -1,32 +1,53 @@
-import {Request, Response} from "express";
-import {deleteVendorById, getVendorById, getVendors, updateVendorById} from "../repositories/vendor_repository";
-import {createUser} from "../repositories/user_repository";
+import {NextFunction, Request, Response} from "express";
+import {RequestWithAuthentication} from "../middlewares";
+import * as Repository from "../repositories/vendor_repository";
+import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
+import {isFloat, isString, Validator} from "../helpers/validator";
 
-export const getAllVendors = async (req: Request, res: Response) => {
+export const getAllVendors = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const vendors = await getVendors();
+        const vendors = await Repository.getVendors();
 
-        return res.status(200).json(vendors);
+        res.status(200).json(vendors);
     } catch (error) {
-        console.log(error);
-        return res.sendStatus(400)
+        next(error);
     }
 }
 
-export const deleteVendor = async (req: Request, res: Response) => {
+export const getVendorsById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const {id} = req.params;
+        if (!id) {
+            throw new Error('Id is required');
+        }
 
-        const deletedVendor = await deleteVendorById(id);
+        const vendor = await Repository.getVendorById(id);
 
-        return res.status(200).json(deletedVendor);
+        res.status(200).json(vendor);
     } catch (error) {
-        console.log(error);
-        return res.sendStatus(400)
+        next(error);
     }
 }
 
-export const updateVendor = async (req: Request, res: Response) => {
+
+export const deleteVendor = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const {id} = req.params;
+        if (!id) {
+            throw new Error('Id is required');
+        }
+
+        const vendor = await Repository.getVendorById(id);
+
+        const deletedVendor = await Repository.deleteVendorById(id);
+
+        res.status(200).json(deletedVendor);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const updateVendor = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         // const {id} = req.params;
         //
@@ -42,7 +63,55 @@ export const updateVendor = async (req: Request, res: Response) => {
         //
         // return res.status(200).json(req.body).end();
     } catch (error) {
-        console.log(error);
-        return res.sendStatus(400)
+        next(error);
+    }
+}
+
+
+export const updateVendorProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const {errors, values} = await Validator(req, {
+            logo_url: isString({label: 'Logo URL'}),
+            phone: isString({label: 'Phone'}),
+            description: isString({label: 'Description'}),
+            address: isString({label: 'Address'}),
+            lat: isFloat({label: 'Latitude'}),
+            long: isFloat({label: 'Longitude'}),
+            picture_1: isString({label: 'Picture 1'}),
+            picture_2: isString({label: 'Picture 2'}),
+            picture_3: isString({label: 'Picture 3'}),
+            picture_4: isString({label: 'Picture 4'}),
+            picture_5: isString({label: 'Picture 5'}),
+        });
+
+        if (errors.length > 0) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: errors[0].msg
+            });
+        }
+
+
+        const vendor = await Repository.updateVendorById(req.authentication?.ref_id as string, values);
+        if (!vendor) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Vendor not found"
+            });
+        }
+
+
+        res.status(200).json(vendor).end();
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getVendorProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction) => {
+    try {
+        const vendor: Repository.Vendor | null = await Repository.getVendorById(req.authentication?.ref_id as string);
+        return res.status(200).json(vendor).end();
+    } catch (error) {
+        next(error);
     }
 }

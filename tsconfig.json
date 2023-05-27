@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
+    "noImplicitAny": true,
+    "strictNullChecks": true,
     "module": "NodeNext",
     "moduleResolution": "node",
     "baseUrl": "src",
     "lib": ["es6"],
     "outDir": "dist",
     "sourceMap": true,
-    "noImplicitAny": true,
     "declaration": true,
     "strict": true,
     "esModuleInterop": true,
