@@ -7,13 +7,14 @@ import * as AuthenticationRepository from "../repositories/authentication_reposi
 import * as UserRepository from "../repositories/user_repository";
 import {Validator} from "../helpers/validator";
 import * as console from "console";
+import {ResponseSuccess} from "../exceptions/response";
 
 export default class AuthenticationController {
 
     constructor() {
     }
 
-    public async vendorLogin(req: Request, res: Response, next: NextFunction) {
+    public async vendorLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const {errors, values} = await Validator(req, {
                 password: {
@@ -75,18 +76,17 @@ export default class AuthenticationController {
             res.cookie(AUTHENTICATION, token, {domain: 'localhost', path: '/'});
 
             const data = {
-                id: authentication.id,
                 token: token,
                 vendor,
             }
 
-            return res.status(200).json(data).end();
+            ResponseSuccess(res, {data, message: "Login Success"});
         } catch (error) {
             next(error)
         }
     }
 
-    public async vendorRegister(req: Request, res: Response, next: NextFunction) {
+    public async vendorRegister(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const {errors, values} = await Validator(req, {
                 hotel_name: {
@@ -126,14 +126,14 @@ export default class AuthenticationController {
             const {email, password, hotel_name} = values;
 
             const salt: string = random();
-            const vendor = await VendorRepository.createVendor({
+            const data = await VendorRepository.createVendor({
                 email,
                 hotel_name,
                 salt,
                 password: verifyJWT(salt, password),
             });
 
-            return res.status(200).json(vendor).end();
+            ResponseSuccess(res, {data, message: "Register Success"});
         } catch (error) {
             next(error)
         }
@@ -176,11 +176,10 @@ export default class AuthenticationController {
                     });
                 }
                 const data = {
-                    id: authentication.id,
                     token: authentication.token,
                     user,
                 }
-                return res.status(200).json(data)
+                return ResponseSuccess(res, {data, message: "Refresh Success"});
             }
             if (authentication.ref_table === AuthRole.VENDOR) {
                 const vendor = await VendorRepository.getVendorById(authentication.ref_id);
@@ -194,11 +193,10 @@ export default class AuthenticationController {
                 res.cookie(AUTHENTICATION, authentication.token, {domain: 'localhost', path: '/'});
 
                 const data = {
-                    id: authentication.id,
                     token: authentication.token,
                     vendor,
                 }
-                return res.status(200).json(data)
+                return ResponseSuccess(res, {data, message: "Refresh Success"});
             }
 
             throw new BaseError({
@@ -227,7 +225,7 @@ export default class AuthenticationController {
             }
 
             const authentication = await AuthenticationRepository.getAuthenticationByToken(token);
-            if (!authentication) {
+            if (authentication == null) {
                 throw new BaseError({
                     name: BaseErrorArgsName.Unauthorized,
                     message: "Token tidak valid"
@@ -236,11 +234,7 @@ export default class AuthenticationController {
 
             await AuthenticationRepository.deleteAuthenticationByToken(token);
 
-            const data = {
-                massage: 'berhasil logout',
-            }
-            return res.status(200).json(data)
-
+            return ResponseSuccess(res, {data: true, message: "Logout Success"});
         } catch (error) {
             next(error)
         }
@@ -254,11 +248,7 @@ export default class AuthenticationController {
                 user = await UserRepository.createUser({
                     email: 'alpinnz@gmail.com',
                     name: 'Alfin Noviaji',
-                })
-                // throw new BaseError({
-                //     name: BaseErrorArgsName.Unauthorized,
-                //     message: "user not found"
-                // });
+                });
             }
 
 
@@ -283,13 +273,11 @@ export default class AuthenticationController {
             res.cookie(AUTHENTICATION, token, {domain: 'localhost', path: '/'});
 
             const data = {
-                id: authentication.id,
                 token: token,
                 user,
             }
 
-
-            return res.status(200).json(data).end();
+            return ResponseSuccess(res, {data, message: "Refresh Success"});
         } catch (error) {
             next(error)
         }

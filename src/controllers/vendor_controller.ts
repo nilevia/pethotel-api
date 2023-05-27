@@ -3,6 +3,7 @@ import {RequestWithAuthentication} from "../middlewares";
 import * as Repository from "../repositories/vendor_repository";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {isFloat, isString, Validator} from "../helpers/validator";
+import {ResponseSuccess} from "../exceptions/response";
 
 export const getAllVendors = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -99,8 +100,8 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
         }
 
 
-        const vendor = await Repository.updateVendorById(req.authentication?.ref_id as string, values);
-        if (!vendor) {
+        const data = await Repository.updateVendorById(req.authentication?.ref_id as string, values);
+        if (!data) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: "Vendor not found"
@@ -108,7 +109,7 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
         }
 
 
-        res.status(200).json(vendor).end();
+        ResponseSuccess(res, {data, message: "Update Profile Success"});
     } catch (error) {
         next(error);
     }
@@ -116,8 +117,8 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
 
 export const getVendorProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction) => {
     try {
-        const vendor: Repository.Vendor | null = await Repository.getVendorById(req.authentication?.ref_id as string);
-        return res.status(200).json(vendor).end();
+        const data: Repository.Vendor | null = await Repository.getVendorById(req.authentication?.ref_id as string);
+        ResponseSuccess(res, {data, message: "Get Profile Success"});
     } catch (error) {
         next(error);
     }

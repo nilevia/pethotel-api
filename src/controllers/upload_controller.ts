@@ -4,6 +4,7 @@ import * as path from "path";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 
 import * as process from "process";
+import {ResponseSuccess} from "../exceptions/response";
 
 export const dirPublic: string = 'public'
 export const dirUploads: string = 'uploads'
@@ -58,13 +59,13 @@ export const uploadImage = async (req: Request, res: Response, next: NextFunctio
                 return res.status(500).send(error);
             }
 
-            res.json(
-                {
-                    url: `${process.env.DOMAIN}/${dirPath}`,
-                    path: dirPath,
-                    filename: filename,
-                }
-            );
+            const data = {
+                url: `${process.env.DOMAIN}/${dirPath}`,
+                path: dirPath,
+                filename: filename,
+            }
+
+            ResponseSuccess(res, {data, message: "Upload Success"});
         });
 
     } catch (error) {
