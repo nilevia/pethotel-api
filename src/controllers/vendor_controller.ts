@@ -2,7 +2,7 @@ import {NextFunction, Request, Response} from "express";
 import {RequestWithAuthentication} from "../middlewares";
 import * as Repository from "../repositories/vendor_repository";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {isFloat, isString, Validator} from "../helpers/validator";
+import {isFloat, isMobilePhone, isString, isUrl, Validator} from "../helpers/validator";
 import {ResponseSuccess} from "../exceptions/response";
 
 export const getAllVendors = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -79,17 +79,17 @@ export const updateVendor = async (req: Request, res: Response, next: NextFuncti
 export const updateVendorProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
         const {errors, values} = await Validator(req, {
-            logo_url: isString({label: 'Logo URL'}),
-            phone: isString({label: 'Phone'}),
+            logo_url: isUrl({label: 'Logo URL'}),
+            phone: isMobilePhone({label: 'Phone'}),
             description: isString({label: 'Description'}),
             address: isString({label: 'Address'}),
             lat: isFloat({label: 'Latitude'}),
             long: isFloat({label: 'Longitude'}),
-            picture_1: isString({label: 'Picture 1'}),
-            picture_2: isString({label: 'Picture 2'}),
-            picture_3: isString({label: 'Picture 3'}),
-            picture_4: isString({label: 'Picture 4'}),
-            picture_5: isString({label: 'Picture 5'}),
+            picture_1: isUrl({label: 'Picture 1'}),
+            picture_2: isUrl({label: 'Picture 2'}),
+            picture_3: isUrl({label: 'Picture 3'}),
+            picture_4: isUrl({label: 'Picture 4'}),
+            picture_5: isUrl({label: 'Picture 5'}),
         });
 
         if (errors.length > 0) {
@@ -108,7 +108,6 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
             });
         }
 
-
         ResponseSuccess(res, {data, message: "Update Profile Success"});
     } catch (error) {
         next(error);
@@ -117,7 +116,8 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
 
 export const getVendorProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction) => {
     try {
-        const data: Repository.Vendor | null = await Repository.getVendorById(req.authentication?.ref_id as string);
+        let data: Repository.Vendor | null = await Repository.getVendorById(req.authentication?.ref_id as string);
+
         ResponseSuccess(res, {data, message: "Get Profile Success"});
     } catch (error) {
         next(error);

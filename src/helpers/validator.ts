@@ -41,6 +41,23 @@ export const isString = (args: iisString): ParamSchema => {
     }
 }
 
+export const isUrl = (args: iisString): ParamSchema => {
+    return {
+        isString: {errorMessage: `${args.label} must be string`},
+        isURL: {errorMessage: `${args.label} must be url`},
+
+        optional: {options: {values: 'null'}}
+    }
+}
+
+export const isMobilePhone = (args: iisString): ParamSchema => {
+    return {
+        isString: {errorMessage: `${args.label} must be string`},
+        isMobilePhone:{errorMessage: `${args.label} must be phone number`},
+        optional: {options: {values: 'null'}}
+    }
+}
+
 interface iisFloat {
     label: string;
 }
