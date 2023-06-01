@@ -1,5 +1,5 @@
-import provinces from "./../../public/json/provinces.json"
-import citys from "./../../public/json/citys.json"
+// import provinces from "./../../public/json/provinces.json"
+// import citys from "./../../public/json/citys.json"
 
 
 export type Privince = {
@@ -17,13 +17,14 @@ export type City = {
 
 
 export const getCitys = (): City[] => {
-    return citys.map((city: City) => {
-        const province = provinces.find((province: Privince) => province.id === city.province_id);
-        return {
-            ...city,
-            province_name: province?.name
-        }
-    });
+    return [];
+    // return citys.map((city: City) => {
+    //     const province = provinces.find((province: Privince) => province.id === city.province_id);
+    //     return {
+    //         ...city,
+    //         province_name: province?.name
+    //     }
+    // });
 };
 
-export const getProvinces = (): Privince[] => provinces;
+export const getProvinces = (): Privince[] => [];

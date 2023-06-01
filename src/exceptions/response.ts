@@ -2,17 +2,17 @@ import {Response} from "express";
 import {BaseError, HttpCode} from "./base_error";
 
 
-interface iResponseSuccess {
+interface IResponseSuccess {
     message: string;
     data: any;
     error?: string,
 }
 
-export const ResponseSuccess = (res: Response, args: iResponseSuccess) => {
+export const ResponseSuccess = (res: Response, args: IResponseSuccess) => {
     return res.status(200).json({
         message: args.message,
         data: args.data,
-        error: args.error,
+        error: null,
     })
 }
 
