@@ -6,7 +6,7 @@ import {isAuthenticated} from "../middlewares";
 export default class CityRouter {
     private router: Router;
     private controller = Controller;
-    private prefix: string = '/city';
+    private prefix: string = '/city-list';
 
     constructor(router: Router) {
         this.router = router;
