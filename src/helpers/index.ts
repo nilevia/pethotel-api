@@ -9,7 +9,7 @@ export const addDomainUrl = (path: string): string => `${process.env.DOMAIN}/${p
 
 export const removeDomainUrl = (url: string): string => {
     const Url:URL = new URL(url);
-    return Url.href.replace(Url.origin, '');
+    return Url.href.replace(`${Url.origin}/`, '');
 }
 
 
