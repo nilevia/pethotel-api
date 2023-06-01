@@ -41,6 +41,13 @@ export const isString = (args: iisString): ParamSchema => {
     }
 }
 
+export const isBoolean = (args: iisString): ParamSchema => {
+    return {
+        isBoolean: {errorMessage: `${args.label} must be boolean`},
+        optional: {options: {values: 'null'}}
+    }
+}
+
 export const isUrl = (args: iisString): ParamSchema => {
     return {
         isString: {errorMessage: `${args.label} must be string`},

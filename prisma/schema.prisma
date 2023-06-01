@@ -59,22 +59,9 @@ model media {
 }
 
 model city {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  hotel_name  String
-  email       String   @unique
-  password    String
-  salt        String
-  logo_url    String?
-  phone       String?
-  description String?
-  address     String?
-  picture_1   String?
-  picture_2   String?
-  picture_3   String?
-  picture_4   String?
-  picture_5   String?
-  lat         Float?
-  long        Float?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id         String   @id @map("_id")
+  name       String   @unique
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
