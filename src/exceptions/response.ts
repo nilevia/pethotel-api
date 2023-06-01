@@ -21,7 +21,6 @@ export const ResponseError = (error: Error | BaseError, res: Response) => {
         return res.status(error.httpCode).json({
             error: error.name,
             message: error.message,
-            reason: error.stack,
         })
     } else {
         console.error(`[ERROR] ${error.name}\nmessage : ${error.message}\nstack   : ${error.stack}`)
