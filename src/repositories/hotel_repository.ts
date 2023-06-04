@@ -51,19 +51,22 @@ export const getHotels = async (params: getHotelsParams): Promise<Hotel[]> => {
     try {
         let where: any = {
             name: {
-                contains: params.filter?.search || "",
+                contains: params.filter?.search ?? "",
             },
-            city: {
-                contains: params.filter?.search || "",
-            },
-            district: {
-                contains: params.filter?.search || "",
-            },
-        }
-
-        if (params.filter?.city) where.city = {
-            ...where.city,
-            equals: params.filter?.city
+            // city: {
+            //     contains: params.filter?.search ?? "",
+            // },
+            // district: {
+            //     contains: params.filter?.search ?? "",
+            // },
+            // city: {
+            //     equals: params.filter?.city ?? "",
+            // }
+        };
+        if (params.filter?.city) {
+            where.city = {
+                equals: params.filter?.city ?? "",
+            }
         }
 
         const result = await prisma.hotel.findMany({
