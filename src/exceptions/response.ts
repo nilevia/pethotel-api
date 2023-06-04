@@ -25,11 +25,9 @@ export const ResponseError = (error: Error | BaseError, res: Response) => {
     } else {
         console.error(`[ERROR] ${error.name}\nmessage : ${error.message}\nstack   : ${error.stack}`)
         return res.status(HttpCode.INTERNAL_SERVER_ERROR).json({
-            error: {
-                error: error.name,
-                message: error.message,
-                reason: error.stack,
-            }
+            error: error.name,
+            message: error.message,
+            reason: error.stack,
         })
     }
 
