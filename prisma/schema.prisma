@@ -88,7 +88,7 @@ model room {
   @@index([id_hotel])
 }
 
-model Authentication {
+model authentication {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   ref_id     String
   ref_table  String
