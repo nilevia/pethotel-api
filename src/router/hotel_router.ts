@@ -15,9 +15,9 @@ export default class HotelRouter {
         this.router.get(`${this.prefix}/:id`, isAuthenticated, this.controller.getHotelById);
         this.router.patch(`${this.prefix}/:id`, this.controller.updateHotelById);
         // TODO HOTEL
-        this.router.get(`${this.prefix}/:id_hotel/room`, isAuthenticated, this.controller.getRoomsByHotelId);
-        this.router.get(`${this.prefix}/:id_hotel/room/:id`, isAuthenticated, this.controller.getRoomByHotelWithById);
-        this.router.patch(`${this.prefix}/:id_hotel/room/:id`, this.controller.updateRoomByHotelWithById);
-        this.router.post(`${this.prefix}/:id_hotel/room`, isAuthenticated, this.controller.createRoom);
+        this.router.get(`${this.prefix}/:hotel_id/room`, isAuthenticated, this.controller.getRoomsByHotelId);
+        this.router.get(`${this.prefix}/:hotel_id/room/:id`, isAuthenticated, this.controller.getRoomByHotelWithById);
+        this.router.patch(`${this.prefix}/:hotel_id/room/:id`, this.controller.updateRoomByHotelWithById);
+        this.router.post(`${this.prefix}/:hotel_id/room`, isAuthenticated, this.controller.createRoom);
     }
 }

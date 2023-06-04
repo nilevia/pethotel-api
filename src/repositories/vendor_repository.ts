@@ -75,7 +75,7 @@ export const createVendor = async (values: Vendor): Promise<Vendor> => {
 
         const hotel = await prisma.hotel.create({
             data: {
-                id_vendor: vendor.id,
+                vendor_id: vendor.id,
                 name: values.hotel!.name!,
             }
         })
@@ -109,12 +109,12 @@ export const updateVendorById = async (id: string, values: Vendor): Promise<Vend
                         image: values.hotel?.image,
                         images: {
                             deleteMany: {
-                                id_hotel: values.hotel!.id,
+                                hotel_id: values.hotel!.id,
                                 // NOT: (values.hotel?.images ?? []).map(({id}) => ({id})),
                             },
                             createMany: {
                                 data: (values.hotel?.images ?? []).map((image) => ({
-                                    id_hotel: values.hotel!.id,
+                                    hotel_id: values.hotel!.id,
                                     image: image?.image!,
                                 })),
                             }

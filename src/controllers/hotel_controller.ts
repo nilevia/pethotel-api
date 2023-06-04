@@ -151,8 +151,8 @@ export const updateHotelById = async (req: RequestWithAuthentication, res: Respo
 
 export const getRoomsByHotelId = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {id_hotel} = req.params;
-        if (!id_hotel) {
+        const {hotel_id} = req.params;
+        if (!hotel_id) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: "Id Hotel is required"
@@ -162,7 +162,7 @@ export const getRoomsByHotelId = async (req: RequestWithAuthentication, res: Res
         const hotels = await RoomRepository.getRooms(
             {
                 filter: {
-                    id_hotel: id_hotel,
+                    hotel_id: hotel_id,
                 }
             }
         );
@@ -178,8 +178,8 @@ export const getRoomsByHotelId = async (req: RequestWithAuthentication, res: Res
 
 export const getRoomByHotelWithById = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {id_hotel, id} = req.params;
-        if (!id_hotel || !id) {
+        const {hotel_id, id} = req.params;
+        if (!hotel_id || !id) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: "Id Hotel is required"
@@ -189,7 +189,7 @@ export const getRoomByHotelWithById = async (req: RequestWithAuthentication, res
         const hotels = await RoomRepository.getRoomById(
             {
                 id: id,
-                id_hotel: id_hotel,
+                hotel_id: hotel_id,
             }
         );
 
@@ -204,8 +204,8 @@ export const getRoomByHotelWithById = async (req: RequestWithAuthentication, res
 
 export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {id_hotel, id} = req.params;
-        if (!id_hotel || !id) {
+        const {hotel_id, id} = req.params;
+        if (!hotel_id || !id) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: "Id Hotel is required"
@@ -230,7 +230,7 @@ export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, 
 
         const hotels = await RoomRepository.updateRoomById(
             {
-                id_hotel: id_hotel,
+                hotel_id: hotel_id,
                 id: id,
                 values: values,
             }
@@ -254,8 +254,8 @@ export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, 
 
 export const createRoom = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {id_hotel} = req.params;
-        if (!id_hotel) {
+        const {hotel_id} = req.params;
+        if (!hotel_id) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: "Id Hotel is required"
@@ -280,7 +280,7 @@ export const createRoom = async (req: RequestWithAuthentication, res: Response, 
 
         const hotels = await RoomRepository.createRoom(
             {
-                id_hotel: id_hotel,
+                hotel_id: hotel_id,
                 values: values,
             }
         );

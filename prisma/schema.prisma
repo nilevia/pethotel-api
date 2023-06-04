@@ -41,7 +41,7 @@ model admin {
 
 model hotel {
   id           String         @id @default(auto()) @map("_id") @db.ObjectId
-  id_vendor    String         @unique @db.ObjectId
+  vendor_id    String         @unique @db.ObjectId
   name         String
   image        String?
   images       hotel_images[]
@@ -58,24 +58,24 @@ model hotel {
   lon          Float?
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
-  vendor       vendor         @relation(fields: [id_vendor], references: [id])
+  vendor       vendor         @relation(fields: [vendor_id], references: [id])
   rooms        room[]
 }
 
 model hotel_images {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  id_hotel   String   @db.ObjectId
+  hotel_id   String   @db.ObjectId
   image      String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-  hotel      hotel    @relation(fields: [id_hotel], references: [id])
+  hotel      hotel    @relation(fields: [hotel_id], references: [id])
 
-  @@index([id_hotel])
+  @@index([hotel_id])
 }
 
 model room {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  id_hotel    String   @db.ObjectId
+  hotel_id    String   @db.ObjectId
   name        String
   image       String
   description String
@@ -83,9 +83,9 @@ model room {
   price       Int
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
-  hotel       hotel    @relation(fields: [id_hotel], references: [id])
+  hotel       hotel    @relation(fields: [hotel_id], references: [id])
 
-  @@index([id_hotel])
+  @@index([hotel_id])
 }
 
 model authentication {

@@ -5,7 +5,7 @@ import {Room} from "./room_repository";
 
 export type Hotel = {
     id?: string,
-    id_vendor?: string | null,
+    vendor_id?: string | null,
     name: string,
     image?: string | null,
     phone?: string | null,
@@ -28,7 +28,7 @@ export type Hotel = {
 
 export type Hotel_Images = {
     id?: string,
-    id_hotel?: string | null,
+    hotel_id?: string | null,
     image: string | null,
     created_at?: Date | undefined,
     updated_at?: Date | undefined,
