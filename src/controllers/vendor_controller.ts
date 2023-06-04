@@ -116,7 +116,7 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
         if (!data) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: "Vendor not found"
+                message: "Update Profile Failed"
             });
         }
 
