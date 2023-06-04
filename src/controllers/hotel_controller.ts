@@ -4,7 +4,8 @@ import * as RoomRepository from "../repositories/room_repository";
 import {ResponseSuccess} from "../exceptions/response";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {AuthRole, RequestWithAuthentication} from "../middlewares";
-import {isBoolean, isNumber, isString, isUrl, Validator} from "../helpers/validator";
+import {isBoolean, isFloat, isMobilePhone, isNumber, isString, isUrl, Validator} from "../helpers/validator";
+import {validate} from "../prisma";
 
 export const getHotels = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -45,16 +46,16 @@ export const getHotels = async (req: RequestWithAuthentication, res: Response, n
 
 export const getHotelById = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {id} = req.params;
-        if (!id) {
+        const {hotel_id} = req.params;
+        if (!hotel_id || !validate(hotel_id)) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: "Id is required"
+                message: !hotel_id ? "Hotel Id is required" : "Hotel Id is not valid"
             });
         }
 
         const hotel = await Repository.getHotelById({
-            id: id,
+            id: hotel_id,
             include_rooms: true,
             include_images: true,
             include_vendor: req.authentication?.ref_table == AuthRole.ADMIN
@@ -78,22 +79,22 @@ export const getHotelById = async (req: RequestWithAuthentication, res: Response
 
 export const updateHotelById = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {id} = req.params;
-        if (!id) {
+        const {hotel_id} = req.params;
+        if (!hotel_id || !validate(hotel_id)) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: "Id is required"
+                message: !hotel_id ? "Hotel Id is required" : "Hotel Id is not valid"
             });
         }
         const {errors, values} = await Validator(req, {
-            // image: isUrl({label: 'Image'}),
-            // phone: isMobilePhone({label: 'Phone'}),
-            // description: isString({label: 'Description'}),
-            // district: isString({label: 'District'}),
-            // city: isString({label: 'City'}),
-            // address: isString({label: 'Address'}),
-            // lat: isFloat({label: 'Latitude'}),
-            // lon: isFloat({label: 'Longitude'}),
+            image: isUrl({label: 'Image'}),
+            phone: isMobilePhone({label: 'Phone'}),
+            description: isString({label: 'Description'}),
+            district: isString({label: 'District'}),
+            city: isString({label: 'City'}),
+            address: isString({label: 'Address'}),
+            lat: isFloat({label: 'Latitude'}),
+            lon: isFloat({label: 'Longitude'}),
             status: isBoolean({label: 'Status'}),
         });
 
@@ -104,7 +105,9 @@ export const updateHotelById = async (req: RequestWithAuthentication, res: Respo
             });
         }
 
-        const hotel = await Repository.getHotelById({id: id});
+        let hotel = await Repository.getHotelById({
+            id: hotel_id,
+        });
 
         if (!hotel) {
             throw new BaseError({
@@ -112,7 +115,6 @@ export const updateHotelById = async (req: RequestWithAuthentication, res: Respo
                 message: "Hotel not found"
             });
         }
-
 
         hotel.phone = values.phone ?? hotel.phone;
         hotel.description = values.description ?? hotel.description;
@@ -128,15 +130,15 @@ export const updateHotelById = async (req: RequestWithAuthentication, res: Respo
         hotel.image = values.image ?? hotel.image;
         hotel.status = values?.status ?? hotel.status;
 
-        const data = await Repository.updateHotelById({
-            id: id,
+        hotel = await Repository.updateHotelById({
+            id: hotel_id,
             values: hotel,
         });
 
-        if (!data) {
+        if (!hotel) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: "Failed to update hotel"
+                message: 'Update Hotel Failed',
             });
         }
 
@@ -152,14 +154,14 @@ export const updateHotelById = async (req: RequestWithAuthentication, res: Respo
 export const getRoomsByHotelId = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
         const {hotel_id} = req.params;
-        if (!hotel_id) {
+        if (!hotel_id || !validate(hotel_id)) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: "Id Hotel is required"
+                message: !hotel_id ? "Hotel Id is required" : "Hotel Id is not valid"
             });
         }
 
-        const hotels = await RoomRepository.getRooms(
+        const rooms = await RoomRepository.getRooms(
             {
                 filter: {
                     hotel_id: hotel_id,
@@ -169,7 +171,7 @@ export const getRoomsByHotelId = async (req: RequestWithAuthentication, res: Res
 
         ResponseSuccess(res, {
             message: 'Get Hotel Rooms Success',
-            data: hotels
+            data: rooms
         });
     } catch (error) {
         next(error);
@@ -178,24 +180,37 @@ export const getRoomsByHotelId = async (req: RequestWithAuthentication, res: Res
 
 export const getRoomByHotelWithById = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {hotel_id, id} = req.params;
-        if (!hotel_id || !id) {
+        const {hotel_id, room_id} = req.params;
+        if (!hotel_id || !validate(hotel_id)) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: "Id Hotel is required"
+                message: !hotel_id ? "Hotel Id is required" : "Hotel Id is not valid"
+            });
+        }
+        if (!room_id || !validate(room_id)) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: !room_id ? "Room Id is required" : "Room Id is not valid"
             });
         }
 
-        const hotels = await RoomRepository.getRoomById(
+        const room = await RoomRepository.getRoomById(
             {
-                id: id,
+                id: room_id,
                 hotel_id: hotel_id,
             }
         );
 
+        if (!room) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Room Not Found"
+            });
+        }
+
         ResponseSuccess(res, {
             message: 'Get Hotel Room Success',
-            data: hotels
+            data: room
         });
     } catch (error) {
         next(error);
@@ -204,11 +219,17 @@ export const getRoomByHotelWithById = async (req: RequestWithAuthentication, res
 
 export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {hotel_id, id} = req.params;
-        if (!hotel_id || !id) {
+        const {hotel_id, room_id} = req.params;
+        if (!hotel_id || !validate(hotel_id)) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: "Id Hotel is required"
+                message: !hotel_id ? "Hotel Id is required" : "Hotel Id is not valid"
+            });
+        }
+        if (!room_id || !validate(room_id)) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: !room_id ? "Room Id is required" : "Room Id is not valid"
             });
         }
 
@@ -227,25 +248,50 @@ export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, 
             });
         }
 
+        let room = await RoomRepository.getRoomById({
+            id: room_id,
+            hotel_id: hotel_id,
+        })
 
-        const hotels = await RoomRepository.updateRoomById(
-            {
-                hotel_id: hotel_id,
-                id: id,
-                values: values,
-            }
-        );
-
-        if (!hotels) {
+        if (!room) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: "Room Not Found"
             });
         }
 
+        if (room.name !== values.name) {
+            let nameExist = await RoomRepository.getRoomByName({
+                name: values.name,
+                hotel_id: hotel_id,
+            })
+
+            if (nameExist) {
+                throw new BaseError({
+                    name: BaseErrorArgsName.ValidationError,
+                    message: 'Name already exist',
+                });
+            }
+        }
+
+        room = await RoomRepository.updateRoomById(
+            {
+                hotel_id: hotel_id,
+                id: room_id,
+                values: values,
+            }
+        );
+
+        if (!room) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: 'Update Hotel Room Failed',
+            });
+        }
+
         ResponseSuccess(res, {
             message: 'Update Hotel Room Success',
-            data: hotels
+            data: room
         });
     } catch (error) {
         next(error);
@@ -255,15 +301,15 @@ export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, 
 export const createRoom = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
         const {hotel_id} = req.params;
-        if (!hotel_id) {
+        if (!hotel_id || !validate(hotel_id)) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: "Id Hotel is required"
+                message: !hotel_id ? "Hotel Id is required" : "Hotel Id is not valid"
             });
         }
 
         const {errors, values} = await Validator(req, {
-            name: isString({label: 'NAme'}),
+            name: isString({label: 'Name'}),
             image: isUrl({label: 'Image'}),
             description: isString({label: 'Description'}),
             max_pet: isNumber({label: 'Max Pet'}),
@@ -278,16 +324,36 @@ export const createRoom = async (req: RequestWithAuthentication, res: Response, 
         }
 
 
-        const hotels = await RoomRepository.createRoom(
+        let nameExist = await RoomRepository.getRoomByName({
+            name: values.name,
+            hotel_id: hotel_id,
+        })
+
+        if (nameExist) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: 'Name already exist',
+            });
+        }
+
+
+        const room = await RoomRepository.createRoom(
             {
                 hotel_id: hotel_id,
                 values: values,
             }
         );
 
+        if (!room) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: 'Failed to create room',
+            });
+        }
+
         ResponseSuccess(res, {
             message: 'Create Room Success',
-            data: hotels
+            data: room
         });
     } catch (error) {
         next(error);

@@ -73,6 +73,30 @@ export const getRoomById = async (params: getRoomByIdParams): Promise<Room | nul
     }
 }
 
+export type getRoomByNameParams = {
+    name: string,
+    hotel_id: string,
+}
+export const getRoomByName = async (params: getRoomByNameParams): Promise<Room | null> => {
+    try {
+        if (!validate(params.hotel_id)) return null;
+        const result = await prisma.room.findFirst({
+            where: {
+                hotel_id: params.hotel_id,
+                name: {
+                    contains: params.name,
+                }
+            },
+        });
+
+        if (!result) return null;
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
 export type updateRoomByIdParams = {
     id: string,
     hotel_id: string,

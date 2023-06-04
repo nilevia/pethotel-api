@@ -12,12 +12,12 @@ export default class HotelRouter {
         this.router = router;
         // TODO CRUD
         this.router.get(`${this.prefix}`, isAuthenticated, this.controller.getHotels);
-        this.router.get(`${this.prefix}/:id`, isAuthenticated, this.controller.getHotelById);
-        this.router.patch(`${this.prefix}/:id`, this.controller.updateHotelById);
+        this.router.get(`${this.prefix}/:hotel_id`, isAuthenticated, this.controller.getHotelById);
+        this.router.patch(`${this.prefix}/:hotel_id`, this.controller.updateHotelById);
         // TODO HOTEL
         this.router.get(`${this.prefix}/:hotel_id/room`, isAuthenticated, this.controller.getRoomsByHotelId);
-        this.router.get(`${this.prefix}/:hotel_id/room/:id`, isAuthenticated, this.controller.getRoomByHotelWithById);
-        this.router.patch(`${this.prefix}/:hotel_id/room/:id`, this.controller.updateRoomByHotelWithById);
+        this.router.get(`${this.prefix}/:hotel_id/room/:room_id`, isAuthenticated, this.controller.getRoomByHotelWithById);
+        this.router.patch(`${this.prefix}/:hotel_id/room/:room_id`, this.controller.updateRoomByHotelWithById);
         this.router.post(`${this.prefix}/:hotel_id/room`, isAuthenticated, this.controller.createRoom);
     }
 }
