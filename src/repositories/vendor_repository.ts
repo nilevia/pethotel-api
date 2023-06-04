@@ -1,5 +1,4 @@
 import prisma from "../prisma";
-import console from "console";
 import {Hotel} from "./hotel_repository";
 
 export type Vendor = {

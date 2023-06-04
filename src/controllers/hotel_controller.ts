@@ -4,8 +4,7 @@ import * as RoomRepository from "../repositories/room_repository";
 import {ResponseSuccess} from "../exceptions/response";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {AuthRole, RequestWithAuthentication} from "../middlewares";
-import {isBoolean, isFloat, isMobilePhone, isNumber, isString, isUrl, Validator} from "../helpers/validator";
-import {updateRoomById} from "../repositories/room_repository";
+import {isBoolean, isNumber, isString, isUrl, Validator} from "../helpers/validator";
 
 export const getHotels = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {

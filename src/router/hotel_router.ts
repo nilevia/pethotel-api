@@ -2,7 +2,6 @@ import {Router} from 'express';
 
 import * as Controller from '../controllers/hotel_controller';
 import {isAuthenticated} from "../middlewares";
-import {createRoom} from "../controllers/hotel_controller";
 
 export default class HotelRouter {
     private router: Router;

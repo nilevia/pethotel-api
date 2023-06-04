@@ -4,7 +4,6 @@ import * as Repository from "../repositories/vendor_repository";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {isFloat, isMobilePhone, isString, isUrl, Validator} from "../helpers/validator";
 import {ResponseSuccess} from "../exceptions/response";
-import * as console from "console";
 
 export const getAllVendors = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
