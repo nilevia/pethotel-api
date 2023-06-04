@@ -9,6 +9,8 @@ export default class AuthenticationRouter {
 
     constructor(router: Router) {
         this.router = router;
+        this.router.post(`${this.prefix}/admin/register`, this.controller.adminRegister);
+        this.router.post(`${this.prefix}/admin/login`, this.controller.adminLogin);
         this.router.post(`${this.prefix}/vendor/register`, this.controller.vendorRegister);
         this.router.post(`${this.prefix}/vendor/login`, this.controller.vendorLogin);
         this.router.post(`${this.prefix}/user/google`, this.controller.onGoogle);

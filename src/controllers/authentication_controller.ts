@@ -5,6 +5,7 @@ import {AUTHENTICATION, AuthRole} from "../middlewares";
 import * as VendorRepository from "../repositories/vendor_repository";
 import * as AuthenticationRepository from "../repositories/authentication_repository";
 import * as UserRepository from "../repositories/user_repository";
+import * as AdminRepository from "../repositories/admin_repository";
 import {Validator} from "../helpers/validator";
 import * as console from "console";
 import {ResponseSuccess} from "../exceptions/response";
@@ -12,6 +13,123 @@ import {ResponseSuccess} from "../exceptions/response";
 export default class AuthenticationController {
 
     constructor() {
+    }
+
+    public async adminLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const {errors, values} = await Validator(req, {
+                password: {
+                    isLength: {
+                        options: {min: 8},
+                    },
+                    errorMessage: "Password must be greater than 8",
+                },
+                email: {
+                    isEmail: true,
+                    normalizeEmail: true,
+                }
+            })
+
+            if (errors.length > 0) {
+                throw new BaseError({
+                    name: BaseErrorArgsName.ValidationError,
+                    message: errors[0].msg
+                });
+            }
+
+            const {email, password} = values;
+
+            const admin = await AdminRepository.getAdminByEmail(email);
+
+            if (admin === null) {
+                throw new BaseError({
+                    name: BaseErrorArgsName.ValidationError,
+                    message: "Email atau Password salah"
+                });
+            }
+
+            const expectedHash: string = verifyJWT(admin.salt, password);
+
+            if (admin.password != expectedHash) {
+                throw new BaseError({
+                    name: BaseErrorArgsName.ValidationError,
+                    message: "Data tidak ditemukan"
+                });
+            }
+
+            const salt: string = random();
+            const token: string = verifyJWT(salt, admin.id!);
+
+            const authentication = await AuthenticationRepository.createAuthentication({
+                    token,
+                    ref_id: admin.id!,
+                    ref_table: AuthRole.ADMIN,
+                }
+            );
+
+            if (authentication == null) {
+                throw new BaseError({
+                    name: BaseErrorArgsName.Unauthorized,
+                    message: "failed create token"
+                });
+            }
+
+            res.cookie(AUTHENTICATION, token, {domain: 'localhost', path: '/'});
+
+            const data = {
+                token: token,
+                admin,
+            }
+
+            ResponseSuccess(res, {data, message: "Login Admin Success"});
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    public async adminRegister(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const {errors, values} = await Validator(req, {
+                password: {
+                    isLength: {
+                        options: {min: 8},
+                    },
+                    errorMessage: "Password must be greater than 8",
+                },
+                email: {
+                    isEmail: true,
+                    normalizeEmail: true,
+                    custom: {
+                        options: async (email): Promise<void> => {
+                            const existing = await AdminRepository.getAdminByEmail(email);
+                            if (existing) {
+                                throw new Error('Email already in use');
+                            }
+                        }
+                    }
+                }
+            })
+
+            if (errors.length > 0) {
+                throw new BaseError({
+                    name: BaseErrorArgsName.ValidationError,
+                    message: errors[0].msg
+                });
+            }
+
+            const {email, password} = values;
+
+            const salt: string = random();
+            const data = await AdminRepository.createAdmin({
+                email,
+                salt,
+                password: verifyJWT(salt, password),
+            });
+
+            ResponseSuccess(res, {data, message: "Register Admin Success"});
+        } catch (error) {
+            next(error)
+        }
     }
 
     public async vendorLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -38,7 +156,7 @@ export default class AuthenticationController {
 
             const {email, password} = values;
 
-            const vendor = await VendorRepository.getVendorByEmail(email);
+            const vendor = await VendorRepository.getVendorByEmail(email, {hotel: true});
 
             if (vendor === null) {
                 throw new BaseError({
@@ -80,7 +198,7 @@ export default class AuthenticationController {
                 vendor,
             }
 
-            ResponseSuccess(res, {data, message: "Login Success"});
+            ResponseSuccess(res, {data, message: "Login Vendor Success"});
         } catch (error) {
             next(error)
         }
@@ -107,7 +225,7 @@ export default class AuthenticationController {
                     normalizeEmail: true,
                     custom: {
                         options: async (email): Promise<void> => {
-                            const existing = await VendorRepository.getVendorByEmail(email);
+                            const existing = await VendorRepository.getVendorByEmail(email, {hotel: false});
                             if (existing) {
                                 throw new Error('Email already in use');
                             }
@@ -128,12 +246,14 @@ export default class AuthenticationController {
             const salt: string = random();
             const data = await VendorRepository.createVendor({
                 email,
-                hotel_name,
                 salt,
                 password: verifyJWT(salt, password),
+                hotel: {
+                    name: hotel_name
+                }
             });
 
-            ResponseSuccess(res, {data, message: "Register Success"});
+            ResponseSuccess(res, {data, message: "Register Vendor Success"});
         } catch (error) {
             next(error)
         }
@@ -153,7 +273,7 @@ export default class AuthenticationController {
             if (!token) {
                 throw new BaseError({
                     name: BaseErrorArgsName.Unauthorized,
-                    message: "token not found"
+                    message: "Token not found"
                 });
             }
 
@@ -162,7 +282,7 @@ export default class AuthenticationController {
             if (!authentication) {
                 throw new BaseError({
                     name: BaseErrorArgsName.Unauthorized,
-                    message: "token not found"
+                    message: "Token not found"
                 });
             }
 
@@ -172,21 +292,24 @@ export default class AuthenticationController {
                 if (!user) {
                     throw new BaseError({
                         name: BaseErrorArgsName.Unauthorized,
-                        message: "user not found"
+                        message: "User not found"
                     });
                 }
+
+                res.cookie(AUTHENTICATION, authentication.token, {domain: 'localhost', path: '/'});
+
                 const data = {
                     token: authentication.token,
                     user,
                 }
-                return ResponseSuccess(res, {data, message: "Refresh Success"});
+                return ResponseSuccess(res, {data, message: "Refresh User Success"});
             }
             if (authentication.ref_table === AuthRole.VENDOR) {
-                const vendor = await VendorRepository.getVendorById(authentication.ref_id);
+                const vendor = await VendorRepository.getVendorById(authentication.ref_id, {hotel: true});
                 if (!vendor) {
                     throw new BaseError({
                         name: BaseErrorArgsName.Unauthorized,
-                        message: "vendor not found"
+                        message: "Vendor not found"
                     });
                 }
 
@@ -196,12 +319,31 @@ export default class AuthenticationController {
                     token: authentication.token,
                     vendor,
                 }
-                return ResponseSuccess(res, {data, message: "Refresh Success"});
+                return ResponseSuccess(res, {data, message: "Refresh Vendor Success"});
             }
+
+            if (authentication.ref_table === AuthRole.ADMIN) {
+                const admin = await AdminRepository.getAdminById(authentication.ref_id);
+                if (!admin) {
+                    throw new BaseError({
+                        name: BaseErrorArgsName.Unauthorized,
+                        message: "Admin not found"
+                    });
+                }
+
+                res.cookie(AUTHENTICATION, authentication.token, {domain: 'localhost', path: '/'});
+
+                const data = {
+                    token: authentication.token,
+                    admin,
+                }
+                return ResponseSuccess(res, {data, message: "Refresh Admin Success"});
+            }
+
 
             throw new BaseError({
                 name: BaseErrorArgsName.Unauthorized,
-                message: "role not found"
+                message: "Role not found"
             });
         } catch (error) {
             next(error)

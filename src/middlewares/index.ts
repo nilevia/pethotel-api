@@ -3,12 +3,14 @@ import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {Vendor} from "../repositories/vendor_repository";
 import {User} from "../repositories/user_repository";
 import {Authentication, getAuthenticationByToken} from "../repositories/authentication_repository";
+import {Admin} from "../repositories/admin_repository";
 
 
 export interface RequestWithAuthentication extends Request {
     authentication?: Authentication | null;
     user?: User | null;
     vendor?: Vendor | null;
+    admin?: Admin | null;
 }
 
 
@@ -17,6 +19,8 @@ export const AUTHENTICATION: string = 'authentication';
 export enum AuthRole {
     USER = 'user',
     VENDOR = 'vendor',
+    ADMIN = 'admin',
+    ALL = 'all',
 }
 
 export const isAuthenticated = async (req: RequestWithAuthentication, res: Response, next: NextFunction) => {

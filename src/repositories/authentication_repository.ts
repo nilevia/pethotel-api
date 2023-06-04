@@ -1,5 +1,4 @@
 import prisma from "../prisma";
-import {authentication} from "@prisma/client";
 
 
 export type Authentication = {
@@ -13,7 +12,7 @@ export type Authentication = {
 
 export const getAuthenticationByToken = async (token: string): Promise<Authentication | null> => {
     try {
-        const result: authentication | null = await prisma.authentication.findFirst({
+        const result: Authentication | null = await prisma.authentication.findFirst({
             where: {
                 token: token
             }
@@ -29,7 +28,7 @@ export const getAuthenticationByToken = async (token: string): Promise<Authentic
 
 export const deleteAuthenticationByToken = async (token: string): Promise<Authentication | null> => {
     try {
-        const result: authentication | null = await prisma.authentication.delete({
+        const result: Authentication | null = await prisma.authentication.delete({
             where: {
                 token: token
             }
@@ -45,7 +44,7 @@ export const deleteAuthenticationByToken = async (token: string): Promise<Authen
 
 export const createAuthentication = async (values: Authentication): Promise<Authentication | null> => {
     try {
-        const result: authentication | null = await prisma.authentication.create({
+        const result: Authentication | null = await prisma.authentication.create({
             data: values
         })
 

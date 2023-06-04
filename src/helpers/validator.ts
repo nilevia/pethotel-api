@@ -75,3 +75,12 @@ export const isFloat = (args: iisString): ParamSchema => {
         optional: {options: {values: 'null'}}
     }
 }
+
+export const isNumber = (args: iisString): ParamSchema => {
+    return {
+        isNumeric: {errorMessage: `${args.label} must be number`},
+        optional: {options: {values: 'null'}}
+    }
+}
+
+

@@ -20,27 +20,75 @@ model user {
 }
 
 model vendor {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  hotel_name  String
-  email       String   @unique
-  password    String
-  salt        String
-  logo_url    String?
-  phone       String?
-  description String?
-  address     String?
-  picture_1   String?
-  picture_2   String?
-  picture_3   String?
-  picture_4   String?
-  picture_5   String?
-  lat         Float?
-  long        Float?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  email      String   @unique
+  password   String
+  salt       String
+  saldo      Int      @default(0)
+  hotel      hotel?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
-model authentication {
+model admin {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  email      String   @unique
+  password   String
+  salt       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model hotel {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  id_vendor    String         @unique @db.ObjectId
+  name         String
+  image        String?
+  images       hotel_images[]
+  city         String?
+  district     String?
+  phone        String?
+  description  String?
+  rating       Float?
+  rating_count Int?
+  price        Int?
+  status       Boolean        @default(true)
+  address      String?
+  lat          Float?
+  lon          Float?
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+  vendor       vendor         @relation(fields: [id_vendor], references: [id])
+  rooms        room[]
+}
+
+model hotel_images {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  id_hotel   String   @db.ObjectId
+  image      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  hotel      hotel    @relation(fields: [id_hotel], references: [id])
+
+  @@index([id_hotel])
+}
+
+model room {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id_hotel    String   @db.ObjectId
+  name        String
+  image       String
+  description String
+  max_pet     Int
+  price       Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  hotel       hotel    @relation(fields: [id_hotel], references: [id])
+
+  @@index([id_hotel])
+}
+
+model Authentication {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   ref_id     String
   ref_table  String
@@ -49,11 +97,12 @@ model authentication {
   updated_at DateTime @updatedAt
 }
 
-model media {
+model image {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  url        String
+  image      String
   ref_id     String
   ref_table  String
+  ref_column String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
