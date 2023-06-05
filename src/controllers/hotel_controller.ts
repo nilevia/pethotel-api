@@ -86,6 +86,8 @@ export const updateHotelById = async (req: RequestWithAuthentication, res: Respo
                 message: !hotel_id ? "Hotel Id is required" : "Hotel Id is not valid"
             });
         }
+
+
         const {errors, values} = await Validator(req, {
             image: isUrl({label: 'Image'}),
             phone: isMobilePhone({label: 'Phone'}),
@@ -248,6 +250,18 @@ export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, 
             });
         }
 
+        let hotel = await Repository.getHotelById({
+            id: hotel_id,
+        });
+
+        if (!hotel) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Hotel not found"
+            });
+        }
+
+
         let room = await RoomRepository.getRoomById({
             id: room_id,
             hotel_id: hotel_id,
@@ -320,6 +334,17 @@ export const createRoom = async (req: RequestWithAuthentication, res: Response, 
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: errors[0].msg
+            });
+        }
+
+        let hotel = await Repository.getHotelById({
+            id: hotel_id,
+        });
+
+        if (!hotel) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Hotel not found"
             });
         }
 
