@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/client"
 }
 
 datasource db {
@@ -17,6 +18,8 @@ model user {
   phone      String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  // relation
+  order      order[]
 }
 
 model vendor {
@@ -28,6 +31,8 @@ model vendor {
   hotel      hotel?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  // relation
+  order      order[]
 }
 
 model admin {
@@ -58,8 +63,10 @@ model hotel {
   lon          Float?
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
+  // relation
   vendor       vendor         @relation(fields: [vendor_id], references: [id])
   rooms        room[]
+  order        order[]
 }
 
 model hotel_images {
@@ -68,6 +75,7 @@ model hotel_images {
   image      String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  // relation
   hotel      hotel    @relation(fields: [hotel_id], references: [id])
 
   @@index([hotel_id])
@@ -83,16 +91,18 @@ model room {
   price       Int
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+  // relation
   hotel       hotel    @relation(fields: [hotel_id], references: [id])
+  order       order[]
 
   @@index([hotel_id])
 }
 
 model authentication {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  ref_id     String
+  ref_id     String   @unique
   ref_table  String
-  token      String   @unique
+  token      String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
@@ -113,4 +123,43 @@ model city {
   status     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model order {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  hotel_id   String   @db.ObjectId
+  room_id    String   @db.ObjectId
+  user_id    String   @db.ObjectId
+  vendor_id  String   @db.ObjectId
+  start_date DateTime
+  end_date   DateTime
+  status     Int // status dari api 0 = belum bayar, 1 diproses, 2 terbayar, 3 expired / batal
+  notes      String
+  amount     Int
+  expired_at DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  // relation
+  animals    animal[]
+  user       user     @relation(fields: [user_id], references: [id])
+  room       room     @relation(fields: [room_id], references: [id])
+  hotel      hotel    @relation(fields: [hotel_id], references: [id])
+  vendor     vendor   @relation(fields: [vendor_id], references: [id])
+
+  @@index([hotel_id, room_id, user_id, vendor_id])
+}
+
+model animal {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  order_id   String   @db.ObjectId
+  kind       String
+  name       String
+  age        String
+  color      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  // relation
+  order      order    @relation(fields: [order_id], references: [id])
+
+  @@index([order_id])
 }
