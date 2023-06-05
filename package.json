@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc",
+    "build": "concurrently \"npm run prisma\" \"npx tsc\"",
     "prisma": "npx prisma generate",
     "start": "node dist/index.js",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\""
@@ -36,7 +36,7 @@
     "@types/lodash": "^4.14.194",
     "@types/mongoose": "^5.11.97",
     "@types/node-static": "^0.7.7",
-    "concurrently": "^8.0.1",
+    "concurrently": "^8.1.0",
     "nodemon": "^2.0.22",
     "prisma": "^4.15.0",
     "ts-node": "^10.9.1",
