@@ -1,4 +1,4 @@
-import { PrismaClient } from './generated/client'
+import { PrismaClient } from '@prisma/client'
 import ObjectID from "bson-objectid";
 import * as bson from 'bson';
 
