@@ -100,9 +100,9 @@ model room {
 
 model authentication {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  ref_id     String   @unique
+  ref_id     String
   ref_table  String
-  token      String
+  token      String   @unique
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

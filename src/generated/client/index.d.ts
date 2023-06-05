@@ -13134,7 +13134,7 @@ export namespace Prisma {
 
   export type authenticationWhereUniqueInput = {
     id?: string
-    ref_id?: string
+    token?: string
   }
 
   export type authenticationOrderByWithAggregationInput = {
