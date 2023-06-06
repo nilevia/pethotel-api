@@ -1,11 +1,11 @@
-import prisma from "../prisma";
+import prisma, {validate} from "../prisma";
 
 
 export type User = {
     id?: string,
     name: string,
     email: string,
-    phone?: string,
+    phone?: string | null,
     created_at?: Date,
     updated_at?: Date,
 }
@@ -17,11 +17,23 @@ export const getUserByEmail = (email: string) => prisma.user.findFirst({
     }
 })
 
-export const getUserById = (id: string) => prisma.user.findFirst({
-    where: {
-        id: id
+export const getUserById = async (id: string): Promise<User | null> => {
+    try {
+        if (!validate(id)) return null;
+
+        const result = await prisma.user.findFirst({
+            where: {
+                id: id
+            },
+        });
+
+        if (!result) return null;
+
+        return result;
+    } catch (error) {
+        throw error;
     }
-})
+}
 
 export const createUser = (values: User) => {
     return prisma.user.create({

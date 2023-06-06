@@ -1,26 +1,45 @@
 import prisma from "../prisma";
 import {Hotel} from "./hotel_repository";
+import Prisma from "../prisma";
 
 export type Vendor = {
     id?: string,
     email: string,
     password: string,
     salt: string,
+    saldo?: number | null,
     hotel?: Hotel | null,
     created_at?: Date | undefined,
     updated_at?: Date | undefined,
 }
 
-export const getVendors = () => prisma.vendor.findMany();
-export const getVendorByEmail = async (email: string, {hotel = false}): Promise<Vendor | null> => {
+export const GetVendors = async (): Promise<Vendor[] | null> => {
+    try {
+        const result = prisma.vendor.findMany();
+
+        if (!result) return [];
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+type GetVendorByEmailParams = {
+    email: string,
+    hotel?: boolean,
+    hotel_images?: boolean,
+}
+export const GetVendorByEmail = async (params: GetVendorByEmailParams): Promise<Vendor | null> => {
     try {
         const result = await prisma.vendor.findFirst({
-            where: {
-                email: email
-            },
             include: {
-                hotel: hotel,
-            }
+                hotel: params.hotel_images ? {
+                    include: {
+                        images: params.hotel_images ?? false,
+                    }
+                } : params.hotel ?? false,
+            },
         });
 
         if (!result) return null;
@@ -32,44 +51,54 @@ export const getVendorByEmail = async (email: string, {hotel = false}): Promise<
 }
 
 
-export const getVendorById = async (id: string, {hotel = false}): Promise<Vendor | null> => {
+type GetVendorByIdParams = {
+    id: string,
+    hotel?: boolean,
+    hotel_images?: boolean,
+}
+
+export function exclude<T>(type: T | any, keys: string[]): Omit<T, keyof T> {
+    for (let key of keys) {
+        if (type[key]) {
+            delete type[key]
+        }
+    }
+    return type
+}
+
+export const GetVendorById = async (params: GetVendorByIdParams): Promise<Vendor | null> => {
     try {
+
         const result = await prisma.vendor.findFirst({
             where: {
-                id: id
+                id: params.id
             },
             include: {
-                hotel: hotel,
-            }
+                hotel: params.hotel_images ? {
+                    include: {
+                        images: params.hotel_images ?? false,
+                    }
+                } : params.hotel ?? false,
+            },
         });
 
         if (!result) return null;
 
         return result;
-    } catch (error) {
+    } catch
+        (error) {
         throw error;
     }
 }
 
-
-// export const copyWithImages = (data: Vendor) => {
-//     if (data?.logo_url != null) data.logo_url = addDomainUrl(data.logo_url);
-//     if (data?.picture_1 != null) data.picture_1 = addDomainUrl(data.picture_1);
-//     if (data?.picture_2 != null) data.picture_2 = addDomainUrl(data.picture_2);
-//     if (data?.picture_3 != null) data.picture_3 = addDomainUrl(data.picture_3);
-//     if (data?.picture_4 != null) data.picture_4 = addDomainUrl(data.picture_4);
-//     if (data?.picture_5 != null) data.picture_5 = addDomainUrl(data.picture_5);
-//
-//     return data;
-// }
 
 export const createVendor = async (values: Vendor): Promise<Vendor> => {
     const {vendor, hotel} = await prisma.$transaction(async (prisma) => {
         const vendor = await prisma.vendor.create({
             data: {
-                email: values!.email!,
+                email: values.email,
                 password: values.password,
-                salt: values.salt,
+                salt: values!.salt,
             }
         })
 
@@ -120,6 +149,7 @@ export const updateVendorById = async (id: string, values: Vendor): Promise<Vend
                             }
 
                         },
+                        phone: values.hotel?.phone,
                         description: values.hotel?.description,
                         city: values.hotel?.city,
                         district: values.hotel?.district,
@@ -135,7 +165,6 @@ export const updateVendorById = async (id: string, values: Vendor): Promise<Vend
                 hotel: {
                     include: {
                         images: true,
-
                     }
                 }
             }

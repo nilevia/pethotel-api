@@ -1,14 +1,16 @@
 import {NextFunction, Request, Response} from 'express';
 import {verifyJWT, random} from "../helpers";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {AUTHENTICATION, AuthRole} from "../middlewares";
+import {AUTHENTICATION, AuthenticationRole} from "../middlewares";
 import * as VendorRepository from "../repositories/vendor_repository";
 import * as AuthenticationRepository from "../repositories/authentication_repository";
 import * as UserRepository from "../repositories/user_repository";
 import * as AdminRepository from "../repositories/admin_repository";
+import * as HotelRepository from "../repositories/hotel_repository";
 import {Validator} from "../helpers/validator";
 import * as console from "console";
 import {ResponseSuccess} from "../exceptions/response";
+import {exclude, GetVendorByEmail} from "../repositories/vendor_repository";
 
 export default class AuthenticationController {
 
@@ -63,7 +65,7 @@ export default class AuthenticationController {
             const authentication = await AuthenticationRepository.createAuthentication({
                     token,
                     ref_id: admin.id!,
-                    ref_table: AuthRole.ADMIN,
+                    ref_table: AuthenticationRole.ADMIN,
                 }
             );
 
@@ -75,6 +77,8 @@ export default class AuthenticationController {
             }
 
             res.cookie(AUTHENTICATION, token, {domain: 'localhost', path: '/'});
+
+            exclude(admin, ['password', 'salt', 'created_at', 'updated_at']);
 
             const data = {
                 token: token,
@@ -120,13 +124,16 @@ export default class AuthenticationController {
             const {email, password} = values;
 
             const salt: string = random();
-            const data = await AdminRepository.createAdmin({
+
+            const admin = await AdminRepository.createAdmin({
                 email,
                 salt,
                 password: verifyJWT(salt, password),
             });
 
-            ResponseSuccess(res, {data, message: "Register Admin Success"});
+            exclude(admin, ['password', 'salt', 'created_at', 'updated_at']);
+
+            ResponseSuccess(res, {data: admin, message: "Register Admin Success"});
         } catch (error) {
             next(error)
         }
@@ -156,7 +163,10 @@ export default class AuthenticationController {
 
             const {email, password} = values;
 
-            const vendor = await VendorRepository.getVendorByEmail(email, {hotel: true});
+            let vendor = await VendorRepository.GetVendorByEmail({
+                email, hotel: true,
+                hotel_images: true
+            });
 
             if (vendor === null) {
                 throw new BaseError({
@@ -180,7 +190,7 @@ export default class AuthenticationController {
             const authentication = await AuthenticationRepository.createAuthentication({
                     token,
                     ref_id: vendor.id!,
-                    ref_table: AuthRole.VENDOR,
+                    ref_table: AuthenticationRole.VENDOR,
                 }
             );
 
@@ -192,6 +202,14 @@ export default class AuthenticationController {
             }
 
             res.cookie(AUTHENTICATION, token, {domain: 'localhost', path: '/'});
+
+            exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
+            exclude(vendor?.hotel, ['vendor_id', 'created_at', 'updated_at']);
+
+            for (let i = 0; i < (vendor?.hotel?.images ?? []).length; i++) {
+                exclude((vendor?.hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
+            }
+
 
             const data = {
                 token: token,
@@ -225,7 +243,9 @@ export default class AuthenticationController {
                     normalizeEmail: true,
                     custom: {
                         options: async (email): Promise<void> => {
-                            const existing = await VendorRepository.getVendorByEmail(email, {hotel: false});
+                            const existing = await VendorRepository.GetVendorByEmail({
+                                email: email
+                            });
                             if (existing) {
                                 throw new Error('Email already in use');
                             }
@@ -244,7 +264,7 @@ export default class AuthenticationController {
             const {email, password, hotel_name} = values;
 
             const salt: string = random();
-            const data = await VendorRepository.createVendor({
+            const vendor = await VendorRepository.createVendor({
                 email,
                 salt,
                 password: verifyJWT(salt, password),
@@ -253,7 +273,10 @@ export default class AuthenticationController {
                 }
             });
 
-            ResponseSuccess(res, {data, message: "Register Vendor Success"});
+            exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
+            exclude(vendor.hotel, ['vendor_id', 'created_at', 'updated_at']);
+
+            ResponseSuccess(res, {data: vendor, message: "Register Vendor Success"});
         } catch (error) {
             next(error)
         }
@@ -267,8 +290,6 @@ export default class AuthenticationController {
             } else {
                 token = req.cookies[AUTHENTICATION];
             }
-            console.log(req.headers.authorization?.split(' ')[1])
-            console.log(req.cookies[AUTHENTICATION])
 
             if (!token) {
                 throw new BaseError({
@@ -287,7 +308,7 @@ export default class AuthenticationController {
             }
 
 
-            if (authentication.ref_table === AuthRole.USER) {
+            if (authentication.ref_table === AuthenticationRole.USER) {
                 const user = await UserRepository.getUserById(authentication.ref_id);
                 if (!user) {
                     throw new BaseError({
@@ -298,14 +319,22 @@ export default class AuthenticationController {
 
                 res.cookie(AUTHENTICATION, authentication.token, {domain: 'localhost', path: '/'});
 
+                exclude(user, ['password', 'salt', 'created_at', 'updated_at']);
+
                 const data = {
                     token: authentication.token,
                     user,
                 }
+
+
                 return ResponseSuccess(res, {data, message: "Refresh User Success"});
             }
-            if (authentication.ref_table === AuthRole.VENDOR) {
-                const vendor = await VendorRepository.getVendorById(authentication.ref_id, {hotel: true});
+            if (authentication.ref_table === AuthenticationRole.VENDOR) {
+                const vendor = await VendorRepository.GetVendorById({
+                    id: authentication.ref_id,
+                    hotel: true,
+                    hotel_images: true,
+                });
                 if (!vendor) {
                     throw new BaseError({
                         name: BaseErrorArgsName.Unauthorized,
@@ -315,6 +344,13 @@ export default class AuthenticationController {
 
                 res.cookie(AUTHENTICATION, authentication.token, {domain: 'localhost', path: '/'});
 
+                exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
+                exclude(vendor?.hotel, ['vendor_id', 'created_at', 'updated_at']);
+
+                for (let i = 0; i < (vendor?.hotel?.images ?? []).length; i++) {
+                    exclude((vendor?.hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
+                }
+
                 const data = {
                     token: authentication.token,
                     vendor,
@@ -322,7 +358,7 @@ export default class AuthenticationController {
                 return ResponseSuccess(res, {data, message: "Refresh Vendor Success"});
             }
 
-            if (authentication.ref_table === AuthRole.ADMIN) {
+            if (authentication.ref_table === AuthenticationRole.ADMIN) {
                 const admin = await AdminRepository.getAdminById(authentication.ref_id);
                 if (!admin) {
                     throw new BaseError({
@@ -332,6 +368,8 @@ export default class AuthenticationController {
                 }
 
                 res.cookie(AUTHENTICATION, authentication.token, {domain: 'localhost', path: '/'});
+
+                exclude(admin, ['password', 'salt', 'created_at', 'updated_at']);
 
                 const data = {
                     token: authentication.token,
@@ -400,7 +438,7 @@ export default class AuthenticationController {
             const authentication = await AuthenticationRepository.createAuthentication({
                     token,
                     ref_id: user.id,
-                    ref_table: AuthRole.USER,
+                    ref_table: AuthenticationRole.USER,
                 }
             );
 
@@ -414,6 +452,8 @@ export default class AuthenticationController {
 
             res.cookie(AUTHENTICATION, token, {domain: 'localhost', path: '/'});
 
+            exclude(user, ['password', 'salt', 'created_at', 'updated_at']);
+
             const data = {
                 token: token,
                 user,
@@ -424,5 +464,4 @@ export default class AuthenticationController {
             next(error)
         }
     }
-
 }

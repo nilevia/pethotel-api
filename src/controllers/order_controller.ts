@@ -4,7 +4,7 @@ import * as HotelRepository from "../repositories/hotel_repository";
 import * as RoomRepository from "../repositories/room_repository";
 import {ResponseSuccess} from "../exceptions/response";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {AuthRole, RequestWithAuthentication} from "../middlewares";
+import {AuthenticationRole, RequestWithAuthentication} from "../middlewares";
 import {validate} from "../prisma";
 import Joi from 'joi';
 import moment from "moment";
@@ -15,6 +15,28 @@ export const getOrders = async (req: RequestWithAuthentication, res: Response, n
     try {
 
         const orders = await Repository.getOrders({});
+
+        const data= orders.map((e)=>{
+            return {
+                id:e.id,
+                date_start : e.start_date,
+                date_end : e.end_date,
+                hotel:{
+                    id: "78a7weqgfqe9767qwehjjkqwe",
+                    image : "https://nilevia.com/img/coldplay-og.jpeg",
+                    city : "Malang",
+                    district: "Lowokwaru",
+                    name: "Arumba Pet Hotel"
+                },
+                room_name: "kamar 50cm 2 hewan",
+                initial_price:"500000",
+                service_fee: "0",
+                total_price:"500000",
+                total_pet: 2,
+                payment_status : 0,
+                order_status : 0
+            }
+        })
 
         ResponseSuccess(res, {
             message: 'Get Orders Success',
@@ -60,7 +82,7 @@ export const getOrderById = async (req: RequestWithAuthentication, res: Response
 
 export const updateOrderById = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        if (req.authentication?.ref_table !== AuthRole.VENDOR) {
+        if (req.authentication?.ref_table !== AuthenticationRole.VENDOR) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: "Only vendor can update order"
@@ -141,7 +163,7 @@ export const updateOrderById = async (req: RequestWithAuthentication, res: Respo
 
 export const createOrder = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        if (req.authentication?.ref_table !== AuthRole.USER) {
+        if (req.authentication?.ref_table !== AuthenticationRole.USER) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: "Only user can create order"

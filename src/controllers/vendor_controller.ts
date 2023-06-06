@@ -4,41 +4,49 @@ import * as Repository from "../repositories/vendor_repository";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {isFloat, isMobilePhone, isString, isUrl, Validator} from "../helpers/validator";
 import {ResponseSuccess} from "../exceptions/response";
+import {validate} from "../prisma";
+import {exclude} from "../repositories/vendor_repository";
+import Joi from "joi";
 
-export const getAllVendors = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const GetVendors = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const vendors = await Repository.getVendors();
-
-        res.status(200).json(vendors);
+        const vendors = await Repository.GetVendors();
+        ResponseSuccess(res, {data: vendors, message: "Get Vendors Success"});
     } catch (error) {
         next(error);
     }
 }
 
-export const getVendorsById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const GetVendorById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {id} = req.params;
-        if (!id) {
-            throw new Error('Id is required');
+        const {vendor_id} = req.params;
+        if (!vendor_id || !validate(vendor_id)) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: !vendor_id ? "Vendor Id is required" : "Vendor Id is not valid"
+            });
         }
 
-        const vendor = await Repository.getVendorById(id, {hotel: true});
+        const vendor = await Repository.GetVendorById({id: vendor_id, hotel: true});
 
-        res.status(200).json(vendor);
+        ResponseSuccess(res, {data: vendor, message: "Get Vendor Success"});
     } catch (error) {
         next(error);
     }
 }
 
 
-export const deleteVendor = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const DeleteVendorById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {id} = req.params;
-        if (!id) {
-            throw new Error('Id is required');
+        const {vendor_id} = req.params;
+        if (!vendor_id || !validate(vendor_id)) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: !vendor_id ? "Vendor Id is required" : "Vendor Id is not valid"
+            });
         }
 
-        const vendor = await Repository.getVendorById(id, {hotel: false});
+        const vendor = await Repository.GetVendorById({id: vendor_id});
 
         if (!vendor) {
             throw new BaseError({
@@ -47,29 +55,9 @@ export const deleteVendor = async (req: Request, res: Response, next: NextFuncti
             })
         }
 
-        const deletedVendor = await Repository.deleteVendorById(id);
+        const deleted = await Repository.deleteVendorById(vendor_id);
 
-        res.status(200).json(deletedVendor);
-    } catch (error) {
-        next(error);
-    }
-}
-
-export const updateVendor = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-        // const {id} = req.params;
-        //
-        // const {username} = req.body;
-        //
-        // if (!username) {
-        //     return res.sendStatus(400);
-        // }
-        //
-        // const vendor = await getVendorById(id);
-        //
-        // await updateVendorById(id, req.body)
-        //
-        // return res.status(200).json(req.body).end();
+        ResponseSuccess(res, {data: deleted, message: "Delete Vendor Success"});
     } catch (error) {
         next(error);
     }
@@ -78,30 +66,34 @@ export const updateVendor = async (req: Request, res: Response, next: NextFuncti
 
 export const updateVendorProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {errors, values} = await Validator(req, {
-            image: isUrl({label: 'Image'}),
-            images: {
-                isArray: {
-                    errorMessage: 'Images must be an array',
-                },
-            },
-            phone: isMobilePhone({label: 'Phone'}),
-            description: isString({label: 'Description'}),
-            district: isString({label: 'District'}),
-            city: isString({label: 'City'}),
-            address: isString({label: 'Address'}),
-            lat: isFloat({label: 'Latitude'}),
-            lon: isFloat({label: 'Longitude'}),
-        });
+        const schema = Joi.object({
+            image: Joi.string().uri().required(),
+            images: Joi.array().items(Joi.object({
+                id: Joi.string(),
+                image: Joi.string().uri().required(),
+            })).required(),
+            phone: Joi.string().regex(RegExp('^(\\+62)8[1-9][0-9]{6,9}$')).required(),
+            description: Joi.string().required(),
+            district: Joi.string().required(),
+            city: Joi.string().required(),
+            address: Joi.string().required(),
+            lat: Joi.number().required(),
+            lon: Joi.number().required(),
+        })
+        const {value, error} = schema.validate(req.body);
 
-        if (errors.length > 0) {
+        if (error) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: errors[0].msg
+                message: error.message
             });
         }
 
-        const vendor = await Repository.getVendorById(req.authentication?.ref_id as string, {hotel: false});
+        let vendor: Repository.Vendor | null = await Repository.GetVendorById({
+            id: req.authentication?.ref_id as string,
+            hotel: true
+        });
+
         if (!vendor) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
@@ -109,29 +101,49 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
             });
         }
 
-        vendor!.hotel = values;
+        if (value.phone.split)
+
+            vendor!.hotel = value;
 
 
-        const data = await Repository.updateVendorById(req.authentication?.ref_id as string, vendor);
-        if (!data) {
+        vendor = await Repository.updateVendorById(req.authentication?.ref_id as string, vendor);
+        if (!vendor) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: "Update Profile Failed"
             });
         }
 
-        ResponseSuccess(res, {data, message: "Update Profile Success"});
-    } catch (error) {
+        exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
+        exclude(vendor?.hotel, ['vendor_id', 'created_at', 'updated_at']);
 
+        for (let i = 0; i < (vendor?.hotel?.images ?? []).length; i++) {
+            exclude((vendor?.hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
+        }
+
+        ResponseSuccess(res, {data: vendor, message: "Update Profile Success"});
+    } catch (error) {
         next(error);
     }
 }
 
 export const getVendorProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction) => {
     try {
-        let data: Repository.Vendor | null = await Repository.getVendorById(req.authentication?.ref_id as string, {hotel: true});
+        let vendor: Repository.Vendor | null = await Repository.GetVendorById({
+            id: req.authentication?.ref_id as string,
+            hotel: true,
+            hotel_images: true,
+        });
 
-        ResponseSuccess(res, {data, message: "Get Profile Success"});
+        exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
+        exclude(vendor?.hotel, ['vendor_id', 'created_at', 'updated_at']);
+
+        for (let i = 0; i < (vendor?.hotel?.images ?? []).length; i++) {
+            exclude((vendor?.hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
+        }
+
+
+        ResponseSuccess(res, {data: vendor, message: "Get Vendor Profile Success"});
     } catch (error) {
         next(error);
     }

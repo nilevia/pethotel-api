@@ -10,7 +10,7 @@ export interface RequestWithAuthentication extends Request {
     admin?: Admin | null;
 }
 export declare const AUTHENTICATION: string;
-export declare enum AuthRole {
+export declare enum AuthenticationRole {
     USER = "user",
     VENDOR = "vendor",
     ADMIN = "admin",

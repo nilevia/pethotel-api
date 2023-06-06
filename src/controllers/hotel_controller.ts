@@ -3,16 +3,19 @@ import * as Repository from "../repositories/hotel_repository";
 import * as RoomRepository from "../repositories/room_repository";
 import {ResponseSuccess} from "../exceptions/response";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {AuthRole, RequestWithAuthentication} from "../middlewares";
+import {AuthenticationRole, RequestWithAuthentication} from "../middlewares";
 import {isBoolean, isFloat, isMobilePhone, isNumber, isString, isUrl, Validator} from "../helpers/validator";
 import {validate} from "../prisma";
+import {exclude} from "../repositories/vendor_repository";
+import Joi from "joi";
 
 export const getHotels = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {search} = req.query;
+        const {search, city} = req.query;
         const hotels = await Repository.getHotels({
             filter: {
                 search: search as string ?? "",
+                city: req.admin ? city as string ?? null : null,
             }
         });
 
@@ -28,7 +31,7 @@ export const getHotels = async (req: RequestWithAuthentication, res: Response, n
                 rating_count: hotel.rating_count,
             };
 
-            if (req.authentication?.ref_table == AuthRole.ADMIN) {
+            if (req.authentication?.ref_table == AuthenticationRole.ADMIN) {
                 data.address = hotel.address;
             }
             return data;
@@ -58,7 +61,7 @@ export const getHotelById = async (req: RequestWithAuthentication, res: Response
             id: hotel_id,
             include_rooms: true,
             include_images: true,
-            include_vendor: req.authentication?.ref_table == AuthRole.ADMIN
+            include_vendor: req.authentication?.ref_table == AuthenticationRole.ADMIN
         });
 
         if (hotel == null) {
@@ -66,6 +69,12 @@ export const getHotelById = async (req: RequestWithAuthentication, res: Response
                 name: BaseErrorArgsName.ValidationError,
                 message: "Hotel not found"
             });
+        }
+
+        exclude(hotel, ['vendor_id', 'created_at', 'updated_at']);
+
+        for (let i = 0; i < (hotel?.images ?? []).length; i++) {
+            exclude((hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
         }
 
         ResponseSuccess(res, {
@@ -144,6 +153,12 @@ export const updateHotelById = async (req: RequestWithAuthentication, res: Respo
             });
         }
 
+        exclude(hotel, ['vendor_id', 'created_at', 'updated_at']);
+
+        for (let i = 0; i < (hotel?.images ?? []).length; i++) {
+            exclude((hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
+        }
+
         ResponseSuccess(res, {
             message: 'Update Hotel Success',
             data: true,
@@ -170,6 +185,10 @@ export const getRoomsByHotelId = async (req: RequestWithAuthentication, res: Res
                 }
             }
         );
+
+        for (let i = 0; i < rooms.length; i++) {
+            exclude(rooms[i], ['hotel_id', 'created_at', 'updated_at']);
+        }
 
         ResponseSuccess(res, {
             message: 'Get Hotel Rooms Success',
@@ -210,6 +229,8 @@ export const getRoomByHotelWithById = async (req: RequestWithAuthentication, res
             });
         }
 
+        exclude(room, ['hotel_id', 'created_at', 'updated_at']);
+
         ResponseSuccess(res, {
             message: 'Get Hotel Room Success',
             data: room
@@ -235,20 +256,23 @@ export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, 
             });
         }
 
-        const {errors, values} = await Validator(req, {
-            name: isString({label: 'NAme'}),
-            image: isUrl({label: 'Image'}),
-            description: isString({label: 'Description'}),
-            max_pet: isNumber({label: 'Max Pet'}),
-            price: isNumber({label: 'Price'}),
-        });
+        const schema = Joi.object({
+            image: Joi.string().uri().required(),
+            name: Joi.string().required(),
+            description: Joi.string().required(),
+            max_pet: Joi.number().required(),
+            price: Joi.number().required(),
+        })
 
-        if (errors.length > 0) {
+        const {value, error} = schema.validate(req.body);
+
+        if (error) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: errors[0].msg
+                message: error.message
             });
         }
+
 
         let hotel = await Repository.getHotelById({
             id: hotel_id,
@@ -274,9 +298,9 @@ export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, 
             });
         }
 
-        if (room.name !== values.name) {
+        if (room.name !== value.name) {
             let nameExist = await RoomRepository.getRoomByName({
-                name: values.name,
+                name: value.name,
                 hotel_id: hotel_id,
             })
 
@@ -292,7 +316,7 @@ export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, 
             {
                 hotel_id: hotel_id,
                 id: room_id,
-                values: values,
+                values: value,
             }
         );
 
@@ -302,6 +326,8 @@ export const updateRoomByHotelWithById = async (req: RequestWithAuthentication, 
                 message: 'Update Hotel Room Failed',
             });
         }
+
+        exclude(room, ['hotel_id', 'created_at', 'updated_at']);
 
         ResponseSuccess(res, {
             message: 'Update Hotel Room Success',
@@ -322,20 +348,23 @@ export const createRoom = async (req: RequestWithAuthentication, res: Response, 
             });
         }
 
-        const {errors, values} = await Validator(req, {
-            name: isString({label: 'Name'}),
-            image: isUrl({label: 'Image'}),
-            description: isString({label: 'Description'}),
-            max_pet: isNumber({label: 'Max Pet'}),
-            price: isNumber({label: 'Price'}),
-        });
+        const schema = Joi.object({
+            image: Joi.string().uri().required(),
+            name: Joi.string().required(),
+            description: Joi.string().required(),
+            max_pet: Joi.number().required(),
+            price: Joi.number().required(),
+        })
 
-        if (errors.length > 0) {
+        const {value, error} = schema.validate(req.body);
+
+        if (error) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: errors[0].msg
+                message: error.message
             });
         }
+
 
         let hotel = await Repository.getHotelById({
             id: hotel_id,
@@ -350,7 +379,7 @@ export const createRoom = async (req: RequestWithAuthentication, res: Response, 
 
 
         let nameExist = await RoomRepository.getRoomByName({
-            name: values.name,
+            name: value.name,
             hotel_id: hotel_id,
         })
 
@@ -365,7 +394,7 @@ export const createRoom = async (req: RequestWithAuthentication, res: Response, 
         const room = await RoomRepository.createRoom(
             {
                 hotel_id: hotel_id,
-                values: values,
+                values: value,
             }
         );
 

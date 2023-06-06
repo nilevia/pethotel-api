@@ -26,7 +26,6 @@ export const getAdminByEmail = async (email: string): Promise<Admin | null> => {
     }
 }
 
-
 export const getAdminById = async (id: string): Promise<Admin | null> => {
     try {
         if(!validate(id)) return null;

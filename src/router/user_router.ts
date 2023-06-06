@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
 import * as Controller from '../controllers/user_controller';
-import {isAuthenticated} from "../middlewares";
+import {isAuthenticatedUser} from "../middlewares";
 
 export default class UserRouter {
     private router: Router;
@@ -11,7 +11,7 @@ export default class UserRouter {
     constructor(router: Router) {
         this.router = router;
         // TODO Profile
-        this.router.get(`${this.prefix}/profile`, isAuthenticated, this.controller.getUserProfile);
-        this.router.patch(`${this.prefix}/profile`, isAuthenticated, this.controller.updateUserProfile);
+        this.router.get(`${this.prefix}/profile`, isAuthenticatedUser, this.controller.getUserProfile);
+        this.router.patch(`${this.prefix}/profile`, isAuthenticatedUser, this.controller.updateUserProfile);
     }
 }

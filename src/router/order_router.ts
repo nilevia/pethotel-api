@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
 import * as Controller from '../controllers/order_controller';
-import {isAuthenticated} from "../middlewares";
+import {isAuthenticated, isAuthenticatedAll} from "../middlewares";
 
 export default class OrderRouter {
     private router: Router;
@@ -10,9 +10,9 @@ export default class OrderRouter {
 
     constructor(router: Router) {
         this.router = router;
-        this.router.get(`${this.prefix}`, isAuthenticated, this.controller.getOrders);
-        this.router.get(`${this.prefix}/:order_id`, isAuthenticated, this.controller.getOrderById);
-        this.router.patch(`${this.prefix}/:order_id`,isAuthenticated, this.controller.updateOrderById);
-        this.router.post(`${this.prefix}`, isAuthenticated, this.controller.createOrder);
+        this.router.get(`${this.prefix}`, isAuthenticatedAll, this.controller.getOrders);
+        this.router.get(`${this.prefix}/:order_id`, isAuthenticatedAll, this.controller.getOrderById);
+        this.router.patch(`${this.prefix}/:order_id`,isAuthenticatedAll, this.controller.updateOrderById);
+        this.router.post(`${this.prefix}`, isAuthenticatedAll, this.controller.createOrder);
     }
 }

@@ -4,23 +4,26 @@ import {RequestWithAuthentication} from "../middlewares";
 import {isBoolean, isFloat, isString, Validator} from "../helpers/validator";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {ResponseSuccess} from "../exceptions/response";
+import Joi from "joi";
 
 
 export const createCity = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {errors, values} = await Validator(req, {
-            id: isString({label: 'Id'}),
-            name: isString({label: 'Name'}),
-            status: isBoolean({label: 'Status'}),
-        });
-        if (errors.length > 0) {
+        const schema = Joi.object({
+            id: Joi.string().required(),
+            name: Joi.string().required(),
+            status: Joi.boolean(),
+        })
+        const {value, error} = schema.validate(req.body);
+
+        if (error) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: errors[0].msg
+                message: error.message
             });
         }
 
-        const isExisting = await Repository.getCityById(values.id);
+        const isExisting = await Repository.getCityById(value.id);
         if (isExisting != null) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
@@ -29,7 +32,7 @@ export const createCity = async (req: RequestWithAuthentication, res: Response, 
         }
 
 
-        const data = await Repository.createCity(values);
+        const data = await Repository.createCity(value);
         if (!data) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
@@ -60,22 +63,22 @@ export const updateCityById = async (req: RequestWithAuthentication, res: Respon
             });
         }
 
+        const schema = Joi.object({
+            id: Joi.string().required(),
+            name: Joi.string().required(),
+            status: Joi.boolean(),
+        })
+        const {value, error} = schema.validate(req.body);
 
-        const {errors, values} = await Validator(req, {
-            id: isString({label: 'Id'}),
-            name: isString({label: 'Name'}),
-            status: isBoolean({label: 'Status'}),
-        });
-
-        if (errors.length > 0) {
+        if (error) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: errors[0].msg
+                message: error.message
             });
         }
 
-        if(values.id != req.params.id){
-            const isExisting = await Repository.getCityById(values.id);
+        if (value.id != req.params.id) {
+            const isExisting = await Repository.getCityById(value.id);
             if (isExisting != null) {
                 throw new BaseError({
                     name: BaseErrorArgsName.ValidationError,
@@ -83,8 +86,8 @@ export const updateCityById = async (req: RequestWithAuthentication, res: Respon
                 });
             }
         }
-        
-        const data = await Repository.updateCityById(req.params.id, values);
+
+        const data = await Repository.updateCityById(req.params.id, value);
         if (!data) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,

@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
 import * as VendorController from '../controllers/vendor_controller';
-import {isAuthenticated} from "../middlewares";
+import {isAuthenticatedVendor} from "../middlewares";
 
 export default class VendorRouter {
     private router: Router;
@@ -17,7 +17,7 @@ export default class VendorRouter {
         // this.router.patch(`${this.prefix}/:id`, this.controller.updateVendor);
 
         // TODO Profile
-        this.router.get(`${this.prefix}/profile`, isAuthenticated, this.controller.getVendorProfile);
-        this.router.patch(`${this.prefix}/profile`, isAuthenticated, this.controller.updateVendorProfile);
+        this.router.get(`${this.prefix}/profile`, isAuthenticatedVendor, this.controller.getVendorProfile);
+        this.router.patch(`${this.prefix}/profile`, isAuthenticatedVendor, this.controller.updateVendorProfile);
     }
 }

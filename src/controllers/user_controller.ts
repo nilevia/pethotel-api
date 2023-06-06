@@ -4,31 +4,36 @@ import {RequestWithAuthentication} from "../middlewares";
 import {isFloat, isString, Validator} from "../helpers/validator";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {ResponseSuccess} from "../exceptions/response";
+import Joi from "joi";
+import {exclude} from "../repositories/vendor_repository";
 
 
 export const updateUserProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const {errors, values} = await Validator(req, {
-            phone: isString({label: 'Phone'}),
-        });
+        const schema = Joi.object({
+            phone: Joi.string().regex(RegExp('^(\\+62)8[1-9][0-9]{6,9}$')).required(),
+        })
+        const {value, error} = schema.validate(req.body);
 
-        if (errors.length > 0) {
+        if (error) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: errors[0].msg
+                message: error.message
             });
         }
 
 
-        const data = await Repository.updateUserById(req.authentication?.ref_id as string, values);
-        if (!data) {
+        const user = await Repository.updateUserById(req.authentication?.ref_id as string, value);
+        if (!user) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
-                message: "Vendor not found"
+                message: "Update User Profile Failed"
             });
         }
 
-        ResponseSuccess(res, {data, message: "Update Profile Success"});
+        exclude(user, ['password', 'salt', 'created_at', 'updated_at']);
+
+        ResponseSuccess(res, {data: user, message: "Update User Profile Success"});
     } catch (error) {
         next(error);
     }
@@ -36,8 +41,10 @@ export const updateUserProfile = async (req: RequestWithAuthentication, res: Res
 
 export const getUserProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction) => {
     try {
-        const data = await Repository.getUserById(req.authentication?.ref_id as string);
-        ResponseSuccess(res, {data, message: "Get Profile Success"});
+        const user = await Repository.getUserById(req.authentication?.ref_id as string);
+        exclude(user, ['password', 'salt', 'created_at', 'updated_at']);
+
+        ResponseSuccess(res, {data: user, message: "Get Profile Success"});
     } catch (error) {
         next(error);
     }

@@ -50,26 +50,14 @@ export type getHotelsParamsFilter = {
 export const getHotels = async (params: getHotelsParams): Promise<Hotel[]> => {
     try {
 
-        // if (params.filter?.city != null) {
-        //     where.city = {
-        //         equals: params.filter?.city ?? "",
-        //     }
-        // }
-
         const result = await prisma.hotel.findMany({
             where: {
                 name: {
                     contains: params.filter?.search ?? "",
                 },
-                // city: {
-                //     contains: params.filter?.search ?? "",
-                // },
-                // district: {
-                //     contains: params.filter?.search ?? "",
-                // },
-                // city: {
-                //     equals: params.filter?.city ?? "",
-                // }
+                city: params.filter?.city ? {
+                    equals: params.filter?.city ?? "",
+                } : {}
             },
             include: {
                 rooms: params.include_rooms ?? false,

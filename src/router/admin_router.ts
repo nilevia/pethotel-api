@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
 import * as Controller from '../controllers/admin_controller';
-import {isAuthenticated} from "../middlewares";
+import { isAuthenticatedAdmin} from "../middlewares";
 
 export default class AdminRouter {
     private router: Router;
@@ -11,8 +11,8 @@ export default class AdminRouter {
     constructor(router: Router) {
         this.router = router;
 
-        this.router.get(`${this.prefix}/`, isAuthenticated, this.controller.getAdmins);
-        this.router.get(`${this.prefix}/:id`, isAuthenticated, this.controller.getAdminById);
-        this.router.delete(`${this.prefix}/:id`, isAuthenticated, this.controller.deleteAdmin);
+        this.router.get(`${this.prefix}/`, isAuthenticatedAdmin, this.controller.getAdmins);
+        this.router.get(`${this.prefix}/:id`, isAuthenticatedAdmin, this.controller.getAdminById);
+        // this.router.delete(`${this.prefix}/:id`, isAuthenticatedAdmin, this.controller.deleteAdmin);
     }
 }
