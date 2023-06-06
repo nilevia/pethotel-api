@@ -5,6 +5,7 @@ import UploadRouter from "./upload_router";
 import UserRouter from "./user_router";
 import CityRouter from "./city_router";
 import HotelRouter from "./hotel_router";
+import OrderRouter from "./order_router";
 
 export default class Router {
     public readonly router: express.Router;
@@ -17,5 +18,6 @@ export default class Router {
         new UploadRouter(this.router);
         new CityRouter(this.router);
         new HotelRouter(this.router);
+        new OrderRouter(this.router);
     }
 }

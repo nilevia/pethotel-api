@@ -82,18 +82,18 @@ model hotel_images {
 }
 
 model room {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  hotel_id    String   @db.ObjectId
-  name        String
-  image       String
-  description String
-  max_pet     Int
-  price       Int
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  hotel_id     String         @db.ObjectId
+  name         String
+  image        String
+  description  String
+  max_pet      Int
+  price        Int
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
   // relation
-  hotel       hotel    @relation(fields: [hotel_id], references: [id])
-  order       order[]
+  hotel        hotel          @relation(fields: [hotel_id], references: [id])
+  order_detail order_detail[]
 
   @@index([hotel_id])
 }
@@ -126,27 +126,41 @@ model city {
 }
 
 model order {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  hotel_id     String        @db.ObjectId
+  user_id      String        @db.ObjectId
+  vendor_id    String        @db.ObjectId
+  start_date   DateTime
+  end_date     DateTime
+  status       Int           @default(0) // status dari api 0 = belum bayar, 1 diproses, 2 terbayar, 3 expired / batal
+  notes        String
+  amount       Int
+  expired_at   DateTime
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+  // relation
+  animals      animal[]
+  user         user          @relation(fields: [user_id], references: [id])
+  order_detail order_detail?
+  hotel        hotel         @relation(fields: [hotel_id], references: [id])
+  vendor       vendor        @relation(fields: [vendor_id], references: [id])
+
+  @@index([hotel_id, user_id, vendor_id])
+}
+
+model order_detail {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  hotel_id   String   @db.ObjectId
+  order_id   String   @unique @db.ObjectId
   room_id    String   @db.ObjectId
-  user_id    String   @db.ObjectId
-  vendor_id  String   @db.ObjectId
-  start_date DateTime
-  end_date   DateTime
-  status     Int // status dari api 0 = belum bayar, 1 diproses, 2 terbayar, 3 expired / batal
-  notes      String
-  amount     Int
-  expired_at DateTime
+  qty        Int
+  price      Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   // relation
-  animals    animal[]
-  user       user     @relation(fields: [user_id], references: [id])
   room       room     @relation(fields: [room_id], references: [id])
-  hotel      hotel    @relation(fields: [hotel_id], references: [id])
-  vendor     vendor   @relation(fields: [vendor_id], references: [id])
+  order      order    @relation(fields: [order_id], references: [id])
 
-  @@index([hotel_id, room_id, user_id, vendor_id])
+  @@index([room_id, order_id])
 }
 
 model animal {

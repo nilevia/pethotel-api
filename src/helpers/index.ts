@@ -8,8 +8,14 @@ export const verifyJWT = (salt: string, password: string): string => {
 export const addDomainUrl = (path: string): string => `${process.env.DOMAIN}/${path}`;
 
 export const removeDomainUrl = (url: string): string => {
-    const Url:URL = new URL(url);
+    const Url: URL = new URL(url);
     return Url.href.replace(`${Url.origin}/`, '');
 }
 
+
+export const addHours = (date: Date, hours: number): Date => {
+    date.setTime(date.getTime() + hours * 60 * 60 * 1000);
+
+    return date;
+}
 
