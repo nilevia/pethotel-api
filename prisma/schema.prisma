@@ -144,3 +144,11 @@ model city {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
+
+model config {
+  id         String   @id @map("_id")
+  field      String   @unique
+  value      String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}

@@ -14,7 +14,6 @@ import * as process from "process";
 import * as console from "console";
 
 dotenv.config()
-
 class App {
     private readonly app: Express = express();
     private firebase: Firebase;
