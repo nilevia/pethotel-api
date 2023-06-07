@@ -70,16 +70,15 @@ export const getOrders = async (params: getOrdersParams): Promise<Order[]> => {
 }
 
 
-export type getOrderByIdParams = {
+export type GetOrderByIdParams = {
     order_id: string,
-    include_user?: boolean,
-    include_vendor?: boolean,
+    user?: boolean,
+    vendor?: boolean,
     order_detail?: boolean,
-    include_hotel?: boolean,
-    include_animals?: boolean,
+    animals?: boolean,
 }
 
-export const getOrderById = async (params: getOrderByIdParams): Promise<Order | null> => {
+export const GetOrderById = async (params: GetOrderByIdParams): Promise<Order | null> => {
     try {
         if (!validate(params.order_id)) return null;
         const result = await prisma.order.findFirst({
@@ -87,11 +86,10 @@ export const getOrderById = async (params: getOrderByIdParams): Promise<Order | 
                 id: params.order_id,
             },
             include: {
-                animals: params.include_animals,
-                order_detail: params.order_detail,
-                hotel: params.include_hotel,
-                user: params.include_user,
-                vendor: params.include_vendor,
+                animals: params.animals ?? false,
+                order_detail: params.order_detail ?? false,
+                user: params.user ?? false,
+                vendor: params.vendor ?? false,
             }
         });
 

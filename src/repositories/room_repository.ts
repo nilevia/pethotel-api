@@ -1,44 +1,52 @@
 import prisma, {validate} from "../prisma";
-import {Hotel} from "./hotel_repository";
+import {Vendor} from "./vendor_repository";
 
 
 export type Room = {
     id?: string,
-    hotel_id?: string | null,
+    vendor_id?: string | null,
     name: string,
     image: string,
     description: string,
     max_pet: number,
     price: number,
-    hotel?: Hotel | null,
+    vendor?: Vendor | null,
     created_at?: Date | undefined,
     updated_at?: Date | undefined,
 }
 
 
-export type getRoomsParams = {
-    filter?: getHotelsParamsFilter,
+export type GetRoomsParams = {
+    filter?: GetRoomsParamsFilter,
 }
 
-export type getHotelsParamsFilter = {
-    hotel_id: string,
-    search?: string | null | undefined,
+export type GetRoomsParamsFilter = {
+    vendor_id: string,
+    search?: string | null,
 }
 
-export const getRooms = async (params: getRoomsParams): Promise<Room[]> => {
+export const GetRooms = async (params: GetRoomsParams): Promise<Room[]> => {
     try {
-        if (!validate(params.filter!.hotel_id)) return [];
+
+        let where: any = {
+            name: {
+                contains: params.filter?.search ?? "",
+            },
+            description: {
+                contains: params.filter?.search ?? "",
+            },
+        };
+
+        if (params.filter?.vendor_id !== null) {
+            if (!validate(params.filter?.vendor_id ?? '')) return [];
+            where = {
+                ...where,
+                vendor_id: params.filter?.vendor_id ?? '',
+            }
+        }
 
         const result = await prisma.room.findMany({
-            where: {
-                hotel_id: params.filter?.hotel_id,
-                name: {
-                    contains: params.filter?.search ?? "",
-                },
-                description: {
-                    contains: params.filter?.search ?? "",
-                },
-            },
+            where: where,
         });
 
         if (!result) return [];
@@ -50,18 +58,16 @@ export const getRooms = async (params: getRoomsParams): Promise<Room[]> => {
 }
 
 
-export type getRoomByIdParams = {
-    id: string,
-    hotel_id: string,
+export type GetRoomByIdParams = {
+    room_id: string,
 }
 
-export const getRoomById = async (params: getRoomByIdParams): Promise<Room | null> => {
+export const GetRoomById = async (params: GetRoomByIdParams): Promise<Room | null> => {
     try {
-        if (!validate(params.id) || !validate(params.hotel_id)) return null;
+        if (!validate(params.room_id) || !validate(params.room_id)) return null;
         const result = await prisma.room.findFirst({
             where: {
-                id: params.id,
-                hotel_id: params.hotel_id
+                id: params.room_id,
             },
         });
 
@@ -73,16 +79,16 @@ export const getRoomById = async (params: getRoomByIdParams): Promise<Room | nul
     }
 }
 
-export type getRoomByNameParams = {
+export type GetRoomByNameParams = {
     name: string,
-    hotel_id: string,
+    vendor_id: string,
 }
-export const getRoomByName = async (params: getRoomByNameParams): Promise<Room | null> => {
+export const GetRoomByName = async (params: GetRoomByNameParams): Promise<Room | null> => {
     try {
-        if (!validate(params.hotel_id)) return null;
+        if (!validate(params.vendor_id)) return null;
         const result = await prisma.room.findFirst({
             where: {
-                hotel_id: params.hotel_id,
+                vendor_id: params.vendor_id,
                 name: {
                     contains: params.name,
                 }
@@ -97,19 +103,18 @@ export const getRoomByName = async (params: getRoomByNameParams): Promise<Room |
     }
 }
 
-export type updateRoomByIdParams = {
-    id: string,
-    hotel_id: string,
+export type UpdateRoomByIdParams = {
+    room_id: string,
     values: Room,
 }
 
-export const updateRoomById = async (params: updateRoomByIdParams): Promise<Room | null> => {
+export const UpdateRoomById = async (params: UpdateRoomByIdParams): Promise<Room | null> => {
     try {
-        if (!validate(params.id) || !validate(params.hotel_id)) return null;
+        if (!validate(params.room_id) || !validate(params.room_id)) return null;
 
         const result = await prisma.room.update({
             where: {
-                id: params.id
+                id: params.room_id
             },
             data: {
                 description: params.values.description,
@@ -129,18 +134,17 @@ export const updateRoomById = async (params: updateRoomByIdParams): Promise<Room
 }
 
 
-export type createRoomParams = {
-    hotel_id: string,
+export type CreateRoomParams = {
     values: Room,
 }
 
-export const createRoom = async (params: createRoomParams): Promise<Room | null> => {
+export const CreateRoom = async (params: CreateRoomParams): Promise<Room | null> => {
     try {
-        if (!validate(params.hotel_id)) return null;
+        if (!validate(params.values?.vendor_id ?? '')) return null;
 
         const result = await prisma.room.create({
             data: {
-                hotel_id: params.hotel_id,
+                vendor_id: params.values?.vendor_id ?? '',
                 description: params.values.description,
                 name: params.values.name,
                 price: params.values.price,

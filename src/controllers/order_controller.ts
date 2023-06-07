@@ -1,6 +1,6 @@
 import {NextFunction, Response} from "express";
 import * as Repository from "../repositories/order_repository";
-import * as HotelRepository from "../repositories/hotel_repository";
+import * as VendorRepository from "../repositories/vendor_repository";
 import * as RoomRepository from "../repositories/room_repository";
 import {ResponseSuccess} from "../exceptions/response";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
@@ -58,7 +58,7 @@ export const getOrderById = async (req: RequestWithAuthentication, res: Response
         }
 
 
-        const order = await Repository.getOrderById(
+        const order = await Repository.GetOrderById(
             {
                 order_id: order_id
             }
@@ -111,13 +111,12 @@ export const updateOrderById = async (req: RequestWithAuthentication, res: Respo
             });
         }
 
-        let order = await Repository.getOrderById({
+        let order = await Repository.GetOrderById({
             order_id: order_id,
-            include_animals: true,
-            include_hotel: true,
+            animals: true,
+            vendor: true,
             order_detail: true,
-            include_user: true,
-            include_vendor: true,
+            user: true,
         });
 
         if (!order) {
@@ -173,7 +172,7 @@ export const createOrder = async (req: RequestWithAuthentication, res: Response,
         const user_id: string = req.authentication?.ref_id;
 
         const schema = Joi.object({
-            hotel_id: Joi.string().required(),
+            vendor_id: Joi.string().required(),
             room_id: Joi.string().required(),
             start_date: Joi.date().required(),
             end_date: Joi.date().required(),
@@ -194,10 +193,10 @@ export const createOrder = async (req: RequestWithAuthentication, res: Response,
             });
         }
 
-        const {hotel_id, room_id} = value;
+        const {vendor_id, room_id} = value;
 
-        let hotel = await HotelRepository.getHotelById({
-            id: hotel_id,
+        let hotel = await VendorRepository.GetVendorById({
+            id: vendor_id,
         });
 
         if (!hotel) {
@@ -207,9 +206,8 @@ export const createOrder = async (req: RequestWithAuthentication, res: Response,
             });
         }
 
-        let room = await RoomRepository.getRoomById({
-            id: room_id,
-            hotel_id: hotel_id,
+        let room = await RoomRepository.GetRoomById({
+            room_id: room_id,
         })
 
         if (!room) {
@@ -240,7 +238,7 @@ export const createOrder = async (req: RequestWithAuthentication, res: Response,
                 values: {
                     ...value,
                     user_id: user_id,
-                    vendor_id: hotel.vendor_id,
+                    vendor_id: vendor_id,
                     expired_at: expired_at,
                     amount: amount,
                     order_detail: order_detail,

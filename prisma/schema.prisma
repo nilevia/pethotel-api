@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/client"
 }
 
 datasource db {
@@ -11,24 +10,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model authentication {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  ref_id     String
+  ref_table  String
+  token      String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
 model user {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   name       String
   email      String   @unique
   phone      String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  // relation
-  order      order[]
-}
-
-model vendor {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  email      String   @unique
-  password   String
-  salt       String
-  saldo      Int      @default(0)
-  hotel      hotel?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   // relation
@@ -44,12 +39,15 @@ model admin {
   updated_at DateTime @updatedAt
 }
 
-model hotel {
-  id           String         @id @default(auto()) @map("_id") @db.ObjectId
-  vendor_id    String         @unique @db.ObjectId
+model vendor {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  email        String          @unique
+  password     String
+  salt         String
+  saldo        Int             @default(0)
   name         String
   image        String?
-  images       hotel_images[]
+  images       vendor_images[]
   city         String?
   district     String?
   phone        String?
@@ -57,33 +55,32 @@ model hotel {
   rating       Float?
   rating_count Int?
   price        Int?
-  status       Boolean        @default(true)
+  status       Boolean?        @default(true)
   address      String?
   lat          Float?
   lon          Float?
-  created_at   DateTime       @default(now())
-  updated_at   DateTime       @updatedAt
+  created_at   DateTime        @default(now())
+  updated_at   DateTime        @updatedAt
   // relation
-  vendor       vendor         @relation(fields: [vendor_id], references: [id])
   rooms        room[]
   order        order[]
 }
 
-model hotel_images {
+model vendor_images {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  hotel_id   String   @db.ObjectId
+  vendor_id  String   @db.ObjectId
   image      String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
   // relation
-  hotel      hotel    @relation(fields: [hotel_id], references: [id])
+  vendor     vendor   @relation(fields: [vendor_id], references: [id])
 
-  @@index([hotel_id])
+  @@index([vendor_id])
 }
 
 model room {
   id           String         @id @default(auto()) @map("_id") @db.ObjectId
-  hotel_id     String         @db.ObjectId
+  vendor_id    String         @db.ObjectId
   name         String
   image        String
   description  String
@@ -92,37 +89,10 @@ model room {
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
   // relation
-  hotel        hotel          @relation(fields: [hotel_id], references: [id])
+  vendor       vendor         @relation(fields: [vendor_id], references: [id])
   order_detail order_detail[]
 
-  @@index([hotel_id])
-}
-
-model authentication {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  ref_id     String
-  ref_table  String
-  token      String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model image {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  image      String
-  ref_id     String
-  ref_table  String
-  ref_column String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model city {
-  id         String   @id @map("_id")
-  name       String   @unique
-  status     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  @@index([vendor_id])
 }
 
 model order {
@@ -142,7 +112,6 @@ model order {
   animals      animal[]
   user         user          @relation(fields: [user_id], references: [id])
   order_detail order_detail?
-  hotel        hotel         @relation(fields: [hotel_id], references: [id])
   vendor       vendor        @relation(fields: [vendor_id], references: [id])
 
   @@index([hotel_id, user_id, vendor_id])
@@ -176,4 +145,12 @@ model animal {
   order      order    @relation(fields: [order_id], references: [id])
 
   @@index([order_id])
+}
+
+model city {
+  id         String   @id @map("_id")
+  name       String   @unique
+  status     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }

@@ -12,12 +12,12 @@ export default class HotelRouter {
         this.router = router;
         // TODO CRUD
         this.router.get(`${this.prefix}`, isAuthenticatedAll, this.controller.getHotels);
-        this.router.get(`${this.prefix}/:hotel_id`, isAuthenticatedAll, this.controller.getHotelById);
-        this.router.patch(`${this.prefix}/:hotel_id`, isAuthenticatedAdmin, this.controller.updateHotelById);
-        // TODO HOTEL
-        this.router.get(`${this.prefix}/:hotel_id/room`, isAuthenticatedAll, this.controller.getRoomsByHotelId);
-        this.router.get(`${this.prefix}/:hotel_id/room/:room_id`, isAuthenticatedAll, this.controller.getRoomByHotelWithById);
-        this.router.patch(`${this.prefix}/:hotel_id/room/:room_id`, isAuthenticatedVendor, this.controller.updateRoomByHotelWithById);
-        this.router.post(`${this.prefix}/:hotel_id/room`, isAuthenticatedVendor, this.controller.createRoom);
+        this.router.get(`${this.prefix}/:vendor_id`, isAuthenticatedAll, this.controller.getHotelById);
+        this.router.patch(`${this.prefix}/:vendor_id`, isAuthenticatedAdmin, this.controller.updateHotelById);
+        // // TODO HOTEL
+        // this.router.get(`${this.prefix}/:vendor_id/room`, isAuthenticatedAll, this.controller.getRoomsByHotelId);
+        // this.router.get(`${this.prefix}/:vendor_id/room/:room_id`, isAuthenticatedAll, this.controller.getRoomByHotelWithById);
+        // this.router.patch(`${this.prefix}/:vendor_id/room/:room_id`, isAuthenticatedVendor, this.controller.updateRoomByHotelWithById);
+        // this.router.post(`${this.prefix}/:vendor_id/room`, isAuthenticatedVendor, this.controller.createRoom);
     }
 }

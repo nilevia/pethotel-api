@@ -5,7 +5,7 @@ import {isFloat, isString, Validator} from "../helpers/validator";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {ResponseSuccess} from "../exceptions/response";
 import Joi from "joi";
-import {exclude} from "../repositories/vendor_repository";
+import {exclude} from "../prisma";
 
 
 export const updateUserProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {

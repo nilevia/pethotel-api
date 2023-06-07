@@ -1,21 +1,69 @@
-import prisma from "../prisma";
-import {Hotel} from "./hotel_repository";
-import Prisma from "../prisma";
+import prisma, {validate} from "../prisma";
+import {Room} from "./room_repository";
+import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 
 export type Vendor = {
     id?: string,
     email: string,
     password: string,
     salt: string,
+    name: string,
     saldo?: number | null,
-    hotel?: Hotel | null,
+    image?: string | null,
+    phone?: string | null,
+    description?: string | null,
+    city?: string | null,
+    district?: string | null,
+    rating?: number | null,
+    rating_count?: number | null,
+    price?: number | null,
+    address?: string | null,
+    status?: boolean | null,
+    images?: Vendor_Images[] | null,
+    rooms?: Room[] | null,
+    lat?: number | null,
+    lon?: number | null,
     created_at?: Date | undefined,
     updated_at?: Date | undefined,
 }
+export type Vendor_Images = {
+    id?: string,
+    hotel_id?: string | null,
+    image: string | null,
+    created_at?: Date | undefined,
+    updated_at?: Date | undefined,
+    vendor?: Vendor | null,
+}
 
-export const GetVendors = async (): Promise<Vendor[] | null> => {
+
+export type GetVendorsParams = {
+    filter?: GetVendorsParamsFilter,
+    images?: boolean,
+    rooms?: boolean,
+}
+
+export type GetVendorsParamsFilter = {
+    search?: string | null,
+    city?: string | null,
+}
+
+export const GetVendors = async (params: GetVendorsParams): Promise<Vendor[]> => {
     try {
-        const result = prisma.vendor.findMany();
+
+        const result = await prisma.vendor.findMany({
+            where: {
+                name: {
+                    contains: params.filter?.search ?? "",
+                },
+                city: !params.filter?.city ? {} : {
+                    equals: params.filter?.city ?? "",
+                }
+            },
+            include: {
+                rooms: params.rooms ?? false,
+                images: params.images ?? false,
+            },
+        });
 
         if (!result) return [];
 
@@ -27,19 +75,19 @@ export const GetVendors = async (): Promise<Vendor[] | null> => {
 
 type GetVendorByEmailParams = {
     email: string,
-    hotel?: boolean,
-    hotel_images?: boolean,
+    images?: boolean,
+    rooms?: boolean,
 }
 export const GetVendorByEmail = async (params: GetVendorByEmailParams): Promise<Vendor | null> => {
     try {
         const result = await prisma.vendor.findFirst({
-            include: {
-                hotel: params.hotel_images ? {
-                    include: {
-                        images: params.hotel_images ?? false,
-                    }
-                } : params.hotel ?? false,
+            where: {
+                email: params.email
             },
+            include: {
+                images: params.images ?? false,
+                rooms: params.rooms ?? false,
+            }
         });
 
         if (!result) return null;
@@ -53,33 +101,23 @@ export const GetVendorByEmail = async (params: GetVendorByEmailParams): Promise<
 
 type GetVendorByIdParams = {
     id: string,
-    hotel?: boolean,
-    hotel_images?: boolean,
+    images?: boolean,
+    rooms?: boolean,
 }
 
-export function exclude<T>(type: T | any, keys: string[]): Omit<T, keyof T> {
-    for (let key of keys) {
-        if (type[key]) {
-            delete type[key]
-        }
-    }
-    return type
-}
 
 export const GetVendorById = async (params: GetVendorByIdParams): Promise<Vendor | null> => {
     try {
+        if (!validate(params.id)) return null;
 
         const result = await prisma.vendor.findFirst({
             where: {
                 id: params.id
             },
             include: {
-                hotel: params.hotel_images ? {
-                    include: {
-                        images: params.hotel_images ?? false,
-                    }
-                } : params.hotel ?? false,
-            },
+                images: params.images ?? false,
+                rooms: params.rooms ?? false,
+            }
         });
 
         if (!result) return null;
@@ -92,85 +130,92 @@ export const GetVendorById = async (params: GetVendorByIdParams): Promise<Vendor
 }
 
 
-export const createVendor = async (values: Vendor): Promise<Vendor> => {
-    const {vendor, hotel} = await prisma.$transaction(async (prisma) => {
-        const vendor = await prisma.vendor.create({
-            data: {
-                email: values.email,
-                password: values.password,
-                salt: values!.salt,
-            }
-        })
-
-        const hotel = await prisma.hotel.create({
-            data: {
-                vendor_id: vendor.id,
-                name: values.hotel!.name!,
-            }
-        })
-        return {vendor, hotel};
-    })
-
-    return {
-        ...vendor,
-        hotel: hotel,
-    };
+export const CreateVendor = async (values: Vendor): Promise<Vendor | null> => {
+    const vendor = await prisma.vendor.create({
+        data: {
+            email: values.email,
+            password: values.password,
+            salt: values!.salt,
+            name: values.name,
+        }
+    });
+    if (!vendor) return null;
+    return vendor;
 }
 
+type DeleteVendorByIdParams = {
+    id: string,
+}
 
-export const deleteVendorById = (id: string) => prisma.vendor.delete({
-    where: {
-        id: id
-    }
-});
+export const DeleteVendorById = async (params: DeleteVendorByIdParams): Promise<Vendor | null> => {
+    const vendor = await prisma.vendor.delete({
+        where: {
+            id: params.id
+        }
+    });
+    if (!vendor) return null;
+    return vendor;
+}
 
-export const updateVendorById = async (id: string, values: Vendor): Promise<Vendor | null> => {
+type UpdateVendorByIdParams = {
+    id: string,
+    values: Vendor,
+    images?: boolean,
+    rooms?: boolean,
+}
+
+export const UpdateVendorById = async (params: UpdateVendorByIdParams): Promise<Vendor | null> => {
     try {
-
-        const result = await prisma.vendor.update({
-            where: {
-                id: id,
-            },
-            data: {
-                hotel: {
-                    update: {
-                        name: values.hotel?.name,
-                        image: values.hotel?.image,
-                        images: {
-                            deleteMany: {
-                                hotel_id: values.hotel!.id,
-                                // NOT: (values.hotel?.images ?? []).map(({id}) => ({id})),
-                            },
-                            createMany: {
-                                data: (values.hotel?.images ?? []).map((image) => ({
-                                    hotel_id: values.hotel!.id,
-                                    image: image?.image!,
-                                })),
-                            }
-
-                        },
-                        phone: values.hotel?.phone,
-                        description: values.hotel?.description,
-                        city: values.hotel?.city,
-                        district: values.hotel?.district,
-                        rating: values.hotel?.rating,
-                        rating_count: values.hotel?.rating_count,
-                        address: values.hotel?.address,
-                        lat: values.hotel?.lat,
-                        lon: values.hotel?.lon,
-                    }
+        const result = await prisma.$transaction(async (tx) => {
+            const vendor = await tx.vendor.update({
+                where: {
+                    id: params.id,
+                },
+                data: {
+                    phone: params.values.phone,
+                    description: params.values.description,
+                    address: params.values.address,
+                    city: params.values.city,
+                    district: params.values.district,
+                    lat: params.values.lat,
+                    lon: params.values.lon,
+                    name: params.values.name,
+                    price: params.values.price,
+                    rating: params.values.rating,
+                    rating_count: params.values.rating_count,
+                    image: params.values.image,
+                    status: params.values.status,
+                },
+                include: {
+                    images: params.images ?? false,
+                    rooms: params.rooms ?? false,
                 }
-            },
-            include: {
-                hotel: {
-                    include: {
-                        images: true,
-                    }
+            });
+
+            const images: Vendor_Images[] = []
+
+            if ((params.values?.images ?? []).length > 0) {
+
+                for (const image of params.values?.images ?? []) {
+                    const res = await tx.vendor_images.create({
+                        data: {
+                            vendor_id: params.id,
+                            image: image.image!,
+                        }
+                    });
+                    images.push(res);
                 }
+
+
             }
-        });
 
-        if (!result) return null;
+            const data = {
+                ...vendor,
+                images: images,
+            }
+
+            return data;
+        })
 
         return result;
     } catch (error) {

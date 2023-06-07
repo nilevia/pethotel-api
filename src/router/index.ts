@@ -6,6 +6,7 @@ import UserRouter from "./user_router";
 import CityRouter from "./city_router";
 import HotelRouter from "./hotel_router";
 import OrderRouter from "./order_router";
+import RoomRouter from "./room_router";
 
 export default class Router {
     public readonly router: express.Router;
@@ -19,5 +20,6 @@ export default class Router {
         new CityRouter(this.router);
         new HotelRouter(this.router);
         new OrderRouter(this.router);
+        new RoomRouter(this.router);
     }
 }

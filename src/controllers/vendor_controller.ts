@@ -2,15 +2,14 @@ import {NextFunction, Request, Response} from "express";
 import {RequestWithAuthentication} from "../middlewares";
 import * as Repository from "../repositories/vendor_repository";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {isFloat, isMobilePhone, isString, isUrl, Validator} from "../helpers/validator";
 import {ResponseSuccess} from "../exceptions/response";
-import {validate} from "../prisma";
-import {exclude} from "../repositories/vendor_repository";
+import {exclude, validate} from "../prisma";
 import Joi from "joi";
+
 
 export const GetVendors = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const vendors = await Repository.GetVendors();
+        const vendors = await Repository.GetVendors({});
         ResponseSuccess(res, {data: vendors, message: "Get Vendors Success"});
     } catch (error) {
         next(error);
@@ -27,7 +26,7 @@ export const GetVendorById = async (req: Request, res: Response, next: NextFunct
             });
         }
 
-        const vendor = await Repository.GetVendorById({id: vendor_id, hotel: true});
+        const vendor = await Repository.GetVendorById({id: vendor_id, images: true});
 
         ResponseSuccess(res, {data: vendor, message: "Get Vendor Success"});
     } catch (error) {
@@ -55,7 +54,7 @@ export const DeleteVendorById = async (req: Request, res: Response, next: NextFu
             })
         }
 
-        const deleted = await Repository.deleteVendorById(vendor_id);
+        const deleted = await Repository.DeleteVendorById({id: vendor_id});
 
         ResponseSuccess(res, {data: deleted, message: "Delete Vendor Success"});
     } catch (error) {
@@ -67,7 +66,7 @@ export const DeleteVendorById = async (req: Request, res: Response, next: NextFu
 export const updateVendorProfile = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
         const schema = Joi.object({
-            image: Joi.string().uri().required(),
+            image: Joi.string().required(),
             images: Joi.array().items(Joi.object({
                 id: Joi.string(),
                 image: Joi.string().uri().required(),
@@ -91,7 +90,6 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
 
         let vendor: Repository.Vendor | null = await Repository.GetVendorById({
             id: req.authentication?.ref_id as string,
-            hotel: true
         });
 
         if (!vendor) {
@@ -101,12 +99,21 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
             });
         }
 
-        if (value.phone.split)
+        vendor.phone = value.phone;
+        vendor.description = value.description;
+        vendor.district = value.district;
+        vendor.city = value.city;
+        vendor.address = value.address;
+        vendor.lat = value.lat;
+        vendor.lon = value.lon;
+        vendor.images = value.images;
+        vendor.image = value.image;
 
-            vendor!.hotel = value;
 
-
-        vendor = await Repository.updateVendorById(req.authentication?.ref_id as string, vendor);
+        vendor = await Repository.UpdateVendorById({
+            id: req.authentication?.ref_id as string,
+            values: vendor
+        });
         if (!vendor) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
@@ -115,10 +122,9 @@ export const updateVendorProfile = async (req: RequestWithAuthentication, res: R
         }
 
         exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
-        exclude(vendor?.hotel, ['vendor_id', 'created_at', 'updated_at']);
 
-        for (let i = 0; i < (vendor?.hotel?.images ?? []).length; i++) {
-            exclude((vendor?.hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
+        for (let i = 0; i < (vendor?.images ?? []).length; i++) {
+            exclude((vendor?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
         }
 
         ResponseSuccess(res, {data: vendor, message: "Update Profile Success"});
@@ -131,15 +137,13 @@ export const getVendorProfile = async (req: RequestWithAuthentication, res: Resp
     try {
         let vendor: Repository.Vendor | null = await Repository.GetVendorById({
             id: req.authentication?.ref_id as string,
-            hotel: true,
-            hotel_images: true,
+            images: true,
         });
 
         exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
-        exclude(vendor?.hotel, ['vendor_id', 'created_at', 'updated_at']);
 
-        for (let i = 0; i < (vendor?.hotel?.images ?? []).length; i++) {
-            exclude((vendor?.hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
+        for (let i = 0; i < (vendor?.images ?? []).length; i++) {
+            exclude((vendor?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
         }
 
 

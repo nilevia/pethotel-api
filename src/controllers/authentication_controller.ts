@@ -6,11 +6,9 @@ import * as VendorRepository from "../repositories/vendor_repository";
 import * as AuthenticationRepository from "../repositories/authentication_repository";
 import * as UserRepository from "../repositories/user_repository";
 import * as AdminRepository from "../repositories/admin_repository";
-import * as HotelRepository from "../repositories/hotel_repository";
 import {Validator} from "../helpers/validator";
-import * as console from "console";
 import {ResponseSuccess} from "../exceptions/response";
-import {exclude, GetVendorByEmail} from "../repositories/vendor_repository";
+import {exclude} from "../prisma";
 
 export default class AuthenticationController {
 
@@ -164,8 +162,9 @@ export default class AuthenticationController {
             const {email, password} = values;
 
             let vendor = await VendorRepository.GetVendorByEmail({
-                email, hotel: true,
-                hotel_images: true
+                email,
+                images: true,
+                rooms: true,
             });
 
             if (vendor === null) {
@@ -204,10 +203,9 @@ export default class AuthenticationController {
             res.cookie(AUTHENTICATION, token, {domain: 'localhost', path: '/'});
 
             exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
-            exclude(vendor?.hotel, ['vendor_id', 'created_at', 'updated_at']);
 
-            for (let i = 0; i < (vendor?.hotel?.images ?? []).length; i++) {
-                exclude((vendor?.hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
+            for (let i = 0; i < (vendor?.images ?? []).length; i++) {
+                exclude((vendor?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
             }
 
 
@@ -264,17 +262,14 @@ export default class AuthenticationController {
             const {email, password, hotel_name} = values;
 
             const salt: string = random();
-            const vendor = await VendorRepository.createVendor({
+            const vendor = await VendorRepository.CreateVendor({
                 email,
                 salt,
                 password: verifyJWT(salt, password),
-                hotel: {
-                    name: hotel_name
-                }
+                name: hotel_name,
             });
 
             exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
-            exclude(vendor.hotel, ['vendor_id', 'created_at', 'updated_at']);
 
             ResponseSuccess(res, {data: vendor, message: "Register Vendor Success"});
         } catch (error) {
@@ -332,8 +327,7 @@ export default class AuthenticationController {
             if (authentication.ref_table === AuthenticationRole.VENDOR) {
                 const vendor = await VendorRepository.GetVendorById({
                     id: authentication.ref_id,
-                    hotel: true,
-                    hotel_images: true,
+                    images: true,
                 });
                 if (!vendor) {
                     throw new BaseError({
@@ -345,10 +339,9 @@ export default class AuthenticationController {
                 res.cookie(AUTHENTICATION, authentication.token, {domain: 'localhost', path: '/'});
 
                 exclude(vendor, ['password', 'salt', 'created_at', 'updated_at']);
-                exclude(vendor?.hotel, ['vendor_id', 'created_at', 'updated_at']);
 
-                for (let i = 0; i < (vendor?.hotel?.images ?? []).length; i++) {
-                    exclude((vendor?.hotel?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
+                for (let i = 0; i < (vendor?.images ?? []).length; i++) {
+                    exclude((vendor?.images ?? [])[i], ['hotel_id', 'created_at', 'updated_at']);
                 }
 
                 const data = {
