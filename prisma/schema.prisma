@@ -79,57 +79,47 @@ model vendor_images {
 }
 
 model room {
-  id           String         @id @default(auto()) @map("_id") @db.ObjectId
-  vendor_id    String         @db.ObjectId
-  name         String
-  image        String
-  description  String
-  max_pet      Int
-  price        Int
-  created_at   DateTime       @default(now())
-  updated_at   DateTime       @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  vendor_id   String   @db.ObjectId
+  name        String
+  image       String
+  description String
+  max_pet     Int
+  price       Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
   // relation
-  vendor       vendor         @relation(fields: [vendor_id], references: [id])
-  order_detail order_detail[]
+  vendor      vendor   @relation(fields: [vendor_id], references: [id])
+  order       order[]
 
   @@index([vendor_id])
 }
 
 model order {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
-  hotel_id     String        @db.ObjectId
-  user_id      String        @db.ObjectId
-  vendor_id    String        @db.ObjectId
-  start_date   DateTime
-  end_date     DateTime
-  status       Int           @default(0) // status dari api 0 = belum bayar, 1 diproses, 2 terbayar, 3 expired / batal
-  notes        String
-  amount       Int
-  expired_at   DateTime
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id        String   @db.ObjectId
+  vendor_id      String   @db.ObjectId
+  room_id        String   @db.ObjectId
+  start_date     DateTime
+  end_date       DateTime
+  room_name      String
+  initial_price  Int
+  total_price    Int
+  total_pet      Int
+  service_fee    Int
+  payment_status Int      @default(0)
+  order_status   Int      @default(0)
+  notes          String
+  expired_at     DateTime
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
   // relation
-  animals      animal[]
-  user         user          @relation(fields: [user_id], references: [id])
-  order_detail order_detail?
-  vendor       vendor        @relation(fields: [vendor_id], references: [id])
+  animals        animal[]
+  user           user     @relation(fields: [user_id], references: [id])
+  vendor         vendor   @relation(fields: [vendor_id], references: [id])
+  room           room     @relation(fields: [room_id], references: [id])
 
-  @@index([hotel_id, user_id, vendor_id])
-}
-
-model order_detail {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  order_id   String   @unique @db.ObjectId
-  room_id    String   @db.ObjectId
-  qty        Int
-  price      Int
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  // relation
-  room       room     @relation(fields: [room_id], references: [id])
-  order      order    @relation(fields: [order_id], references: [id])
-
-  @@index([room_id, order_id])
+  @@index([user_id, vendor_id])
 }
 
 model animal {

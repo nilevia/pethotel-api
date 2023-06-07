@@ -8,39 +8,40 @@ import {AuthenticationRole, RequestWithAuthentication} from "../middlewares";
 import {validate} from "../prisma";
 import Joi from 'joi';
 import moment from "moment";
-import {OrderDetail} from "../repositories/order_repository";
+import {Prisma} from "../../types/generated/client/index-browser";
+import animal = Prisma.ModelName.animal;
 
 
 export const getOrders = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
 
-        const orders = await Repository.getOrders({});
+        const orders = await Repository.GetOrders({vendor: true});
 
-        const data= orders.map((e)=>{
+        const data = orders.map((e) => {
             return {
-                id:e.id,
-                date_start : e.start_date,
-                date_end : e.end_date,
-                hotel:{
-                    id: "78a7weqgfqe9767qwehjjkqwe",
-                    image : "https://nilevia.com/img/coldplay-og.jpeg",
-                    city : "Malang",
-                    district: "Lowokwaru",
-                    name: "Arumba Pet Hotel"
+                id: e.id,
+                date_start: e.start_date,
+                date_end: e.end_date,
+                vendor: {
+                    id: e.vendor?.id,
+                    image: e.vendor?.image,
+                    city: e.vendor?.city,
+                    district: e.vendor?.district,
+                    name: e.vendor?.name,
                 },
-                room_name: "kamar 50cm 2 hewan",
-                initial_price:"500000",
-                service_fee: "0",
-                total_price:"500000",
-                total_pet: 2,
-                payment_status : 0,
-                order_status : 0
+                room_name: e.room_name,
+                initial_price: e.initial_price,
+                service_fee: e.service_fee,
+                total_price: e.total_price,
+                total_pet: e.total_pet,
+                payment_status: e.payment_status,
+                order_status: e.order_status,
             }
         })
 
         ResponseSuccess(res, {
             message: 'Get Orders Success',
-            data: orders
+            data: data
         });
     } catch (error) {
         next(error);
@@ -100,7 +101,8 @@ export const updateOrderById = async (req: RequestWithAuthentication, res: Respo
         const vendor_id: string = req.authentication?.ref_id;
 
         const schema = Joi.object({
-            status: Joi.number().min(0).max(3).required(),
+            payment_status: Joi.number().min(0).max(3).required(),
+            order_status: Joi.number().min(0).max(3).required(),
         });
         const {value, error} = schema.validate(req.body);
 
@@ -112,11 +114,7 @@ export const updateOrderById = async (req: RequestWithAuthentication, res: Respo
         }
 
         let order = await Repository.GetOrderById({
-            order_id: order_id,
-            animals: true,
-            vendor: true,
-            order_detail: true,
-            user: true,
+            order_id: order_id
         });
 
         if (!order) {
@@ -133,10 +131,11 @@ export const updateOrderById = async (req: RequestWithAuthentication, res: Respo
             });
         }
 
-        order.status = value.status;
+        order.order_status = value.order_status;
+        order.payment_status = value.payment_status;
 
 
-        order = await Repository.updateOrderById(
+        order = await Repository.UpdateOrderById(
             {
                 id: order_id,
                 values: order,
@@ -220,28 +219,28 @@ export const createOrder = async (req: RequestWithAuthentication, res: Response,
         const a = moment([value.end_date.getFullYear(), value.end_date.getMonth(), value.end_date.getDate()]);
         const b = moment([value.start_date.getFullYear(), value.start_date.getMonth(), value.start_date.getDate()]);
 
-        const days = a.diff(b, 'days');
+        const days: number = a.diff(b, 'days');
 
-        const order_detail: OrderDetail = {
-            order_id: '',
-            room_id: room_id,
-            qty: days,
-            price: room.price,
-        }
+        const initial_price: number = value.animals.length / room.max_pet * room.price;
 
-        const amount = order_detail.price * order_detail.qty * value.animals.length;
+        const service_fee: number = 0;
+
+        const total_price: number = (initial_price * days) + service_fee;
 
         const expired_at: Date = moment().add(1, 'days').toDate();
 
-        const order = await Repository.createOrder(
+        const order = await Repository.CreateOrder(
             {
                 values: {
                     ...value,
                     user_id: user_id,
                     vendor_id: vendor_id,
+                    room_name: room.name,
+                    initial_price: initial_price,
+                    total_price: total_price,
+                    total_pet: value.animals.length,
+                    service_fee: service_fee,
                     expired_at: expired_at,
-                    amount: amount,
-                    order_detail: order_detail,
                 },
             }
         );

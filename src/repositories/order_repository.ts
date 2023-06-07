@@ -1,33 +1,33 @@
 import prisma, {id, validate} from "../prisma";
 import {Room} from "./room_repository";
+import {Vendor, Vendor_Images} from "./vendor_repository";
+import {User} from "./user_repository";
 
 
 export type Order = {
     id?: string,
-    hotel_id: string,
     user_id: string,
+    room_id: string,
     vendor_id: string,
     start_date: Date,
     end_date: Date,
-    status: number, // status dari api 0 = belum bayar, 1 diproses, 2 terbayar, 3 expired / batal
-    amount: number,
+    room_name: string,
+    initial_price: number,
+    total_price: number,
+    total_pet: number,
+    service_fee: number,
+    payment_status: number,
+    order_status: number,
     notes: string,
-    order_detail?: OrderDetail | null | undefined,
     animals?: Animal[],
+    vendor?: Vendor,
+    user?: User,
+    room?: Room,
     expired_at: Date,
     created_at?: Date | undefined,
     updated_at?: Date | undefined,
 }
 
-export type OrderDetail = {
-    id?: string,
-    order_id: string,
-    room_id: string,
-    qty: number, // status dari api 0 = belum bayar, 1 diproses, 2 terbayar, 3 expired / batal
-    price: number,
-    created_at?: Date | undefined,
-    updated_at?: Date | undefined,
-}
 
 export type Animal = {
     id?: string,
@@ -42,11 +42,15 @@ export type Animal = {
 }
 
 
-export type getOrdersParams = {
-    filter?: getOrdersParamsFilter,
+export type GetOrdersParams = {
+    filter?: GetOrdersParamsFilter,
+    vendor?: boolean,
+    user?: boolean,
+    room?: boolean,
+    animals?: boolean
 }
 
-export type getOrdersParamsFilter = {
+export type GetOrdersParamsFilter = {
     search?: string | null | undefined,
     hotel_id?: string,
     room_id?: string,
@@ -57,9 +61,16 @@ export type getOrdersParamsFilter = {
     status?: string[],
 }
 
-export const getOrders = async (params: getOrdersParams): Promise<Order[]> => {
+export const GetOrders = async (params: GetOrdersParams): Promise<Order[]> => {
     try {
-        const result = await prisma.order.findMany({});
+        const result = await prisma.order.findMany({
+            include: {
+                vendor: params.vendor ?? false,
+                user: params.user ?? false,
+                room: params.room ?? false,
+                animals: params.animals ?? false,
+            }
+        });
 
         if (!result) return [];
 
@@ -74,7 +85,7 @@ export type GetOrderByIdParams = {
     order_id: string,
     user?: boolean,
     vendor?: boolean,
-    order_detail?: boolean,
+    room?: boolean,
     animals?: boolean,
 }
 
@@ -87,7 +98,7 @@ export const GetOrderById = async (params: GetOrderByIdParams): Promise<Order | 
             },
             include: {
                 animals: params.animals ?? false,
-                order_detail: params.order_detail ?? false,
+                room: params.room ?? false,
                 user: params.user ?? false,
                 vendor: params.vendor ?? false,
             }
@@ -101,12 +112,12 @@ export const GetOrderById = async (params: GetOrderByIdParams): Promise<Order | 
     }
 }
 
-export type updateOrderByIdParams = {
+export type UpdateOrderByIdParams = {
     id: string,
     values: Order,
 }
 
-export const updateOrderById = async (params: updateOrderByIdParams): Promise<Order | null> => {
+export const UpdateOrderById = async (params: UpdateOrderByIdParams): Promise<Order | null> => {
     try {
         if (!validate(params.id)) return null;
 
@@ -115,7 +126,8 @@ export const updateOrderById = async (params: updateOrderByIdParams): Promise<Or
                 id: params.id
             },
             data: {
-                status: params.values.status,
+                order_status: params.values.order_status,
+                payment_status: params.values.payment_status,
             },
         })
 
@@ -128,57 +140,53 @@ export const updateOrderById = async (params: updateOrderByIdParams): Promise<Or
 }
 
 
-export type createOrderParams = {
+export type CreateOrderParams = {
     values: Order,
 }
 
-export const createOrder = async (params: createOrderParams): Promise<Order | null> => {
+export const CreateOrder = async (params: CreateOrderParams): Promise<Order | null> => {
     try {
-        const order_id: string = id();
-        const order = await prisma.$transaction(async (prisma) => {
-            const order = await prisma.order.create({
+
+        const order = await prisma.$transaction(async (tx) => {
+            const order = await tx.order.create({
                 data: {
-                    id: order_id,
-                    hotel_id: params.values.hotel_id,
                     user_id: params.values.user_id,
                     vendor_id: params.values.vendor_id,
+                    room_id: params.values.room_id,
                     start_date: params.values.start_date,
                     end_date: params.values.end_date,
-                    status: params.values.status,
-                    amount: params.values.amount,
+                    initial_price: params.values.initial_price,
+                    total_price: params.values.total_price,
+                    total_pet: params.values.total_pet,
+                    service_fee: params.values.service_fee,
+                    payment_status: params.values.payment_status,
+                    order_status: params.values.order_status,
                     notes: params.values.notes,
                     expired_at: params.values.expired_at,
+                    room_name: params.values.room_name,
                 },
             });
 
-            const order_detail = await prisma.order_detail.create({
-                data: {
-                    order_id: order.id,
-                    room_id: params.values.order_detail!.room_id,
-                    qty: params.values.order_detail?.qty ?? 0,
-                    price: params.values.order_detail?.price ?? 0,
-                },
-            });
+            const animals: Animal[] = []
 
-            const animals: Animal[] = [];
-            for (const e of (params.values.animals ?? [])) {
-                const animal = await prisma.animal.create({
-                    data: {
-                        order_id: order.id,
-                        kind: e.kind,
-                        name: e.name,
-                        age: e.age,
-                        color: e.color,
-                    }
-                });
-
-                animals.push(animal);
+            if ((params.values?.animals ?? []).length > 0) {
+                for (const animal of params.values?.animals ?? []) {
+                    const res = await tx.animal.create({
+                        data: {
+                            order_id: order.id,
+                            kind: animal.kind,
+                            name: animal.name,
+                            age: animal.age,
+                            color: animal.color,
+                        }
+                    });
+                    animals.push(res);
+                }
             }
 
-            const data: Order = {
+            const data = {
                 ...order,
-                animals: animals,
-                order_detail: order_detail,
+                animals,
             }
 
             return data;
