@@ -1,0 +1,22 @@
+name: Pre Deploy
+on:
+  push:
+    branches: ["main"]
+    
+  workflow_dispatch:
+
+jobs:
+  setup-prisma-predeplou:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v3
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: 'pre deploy prisma'
+      run: npx prisma generate
+        
