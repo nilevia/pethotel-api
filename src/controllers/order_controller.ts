@@ -8,9 +8,6 @@ import {AuthenticationRole, RequestWithAuthentication} from "../middlewares";
 import {validate} from "../prisma";
 import Joi from 'joi';
 import moment from "moment";
-import {Prisma} from "../../types/generated/client/index-browser";
-import animal = Prisma.ModelName.animal;
-
 
 export const getOrders = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
