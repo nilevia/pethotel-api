@@ -54,7 +54,7 @@ model vendor {
   description  String?
   rating       Float?
   rating_count Int?
-  price        Int?
+  price        Float?
   status       Boolean?        @default(true)
   address      String?
   lat          Float?
@@ -85,7 +85,7 @@ model room {
   image       String
   description String
   max_pet     Int
-  price       Int
+  price       Float
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
   // relation
@@ -103,10 +103,10 @@ model order {
   start_date     DateTime
   end_date       DateTime
   room_name      String
-  initial_price  Int
-  total_price    Int
-  total_pet      Int
-  service_fee    Int
+  initial_price  Float
+  total_price    Float
+  total_pet      Float
+  service_fee    Float
   payment_status Int            @default(0)
   order_status   Int            @default(0)
   notes          String
@@ -157,4 +157,11 @@ model city {
   status     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model config {
+  id          String   @id @map("_id")
+  service_fee Float
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 }

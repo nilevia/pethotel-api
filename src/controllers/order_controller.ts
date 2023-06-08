@@ -8,6 +8,7 @@ import {AuthenticationRole, RequestWithAuthentication} from "../middlewares";
 import {exclude, validate} from "../prisma";
 import Joi from 'joi';
 import moment from "moment";
+import {Config, GetConfig} from "../repositories/config_repository";
 
 export const getOrders = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -250,7 +251,9 @@ export const createOrder = async (req: RequestWithAuthentication, res: Response,
 
         const initial_price: number = value.animals.length / room.max_pet * room.price;
 
-        const service_fee: number = 0;
+        const config: Config = await GetConfig();
+
+        const service_fee: number = config.service_fee;
 
         const total_price: number = (initial_price * days) + service_fee;
 
