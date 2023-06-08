@@ -5,7 +5,7 @@ import * as RoomRepository from "../repositories/room_repository";
 import {ResponseSuccess} from "../exceptions/response";
 import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 import {AuthenticationRole, RequestWithAuthentication} from "../middlewares";
-import {validate} from "../prisma";
+import {exclude, validate} from "../prisma";
 import Joi from 'joi';
 import moment from "moment";
 
@@ -58,7 +58,12 @@ export const getOrderById = async (req: RequestWithAuthentication, res: Response
 
         const order = await Repository.GetOrderById(
             {
-                order_id: order_id
+                order_id: order_id,
+                user: true,
+                vendor: true,
+                room: true,
+                animals: true,
+                reports: true,
             }
         );
 
@@ -69,9 +74,34 @@ export const getOrderById = async (req: RequestWithAuthentication, res: Response
             });
         }
 
+        exclude(order, ['user_id', 'vendor_id', 'room_id', 'created_at', 'updated_at']);
+        exclude(order?.room, ['vendor_id', 'created_at', 'updated_at']);
+        exclude(order?.user, ['created_at', 'updated_at']);
+        exclude(order?.vendor, ['password', 'salt', 'created_at', 'updated_at']);
+
+        for (let i = 0; i < (order?.animals ?? []).length; i++) {
+            exclude((order?.animals ?? [])[i], ['order_id', 'created_at', 'updated_at']);
+        }
+
+        for (let i = 0; i < (order.reports ?? []).length; i++) {
+            exclude((order?.reports ?? [])[i], ['order_id', 'created_at', 'updated_at']);
+        }
+
+        const data: any = {
+            ...order,
+            vendor: {
+                id: order.vendor?.id,
+                image: order.vendor?.image,
+                city: order.vendor?.city,
+                district: order.vendor?.district,
+                name: order.vendor!.name,
+            }
+        }
+
+
         ResponseSuccess(res, {
             message: 'Get Order Success',
-            data: order
+            data: data
         });
     } catch (error) {
         next(error);
@@ -252,6 +282,76 @@ export const createOrder = async (req: RequestWithAuthentication, res: Response,
         ResponseSuccess(res, {
             message: 'Create Order Success',
             data: order
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const createOrderReport = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const {order_id} = req.params;
+
+        if (req.authentication?.ref_table !== AuthenticationRole.VENDOR) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Only vendor can create order report"
+            });
+        }
+
+
+        const vendor_id: string = req.authentication?.ref_id;
+
+        const schema = Joi.object({
+            image: Joi.string().uri().required(),
+            desc: Joi.string().required(),
+        })
+        const {value, error} = schema.validate(req.body);
+
+        if (error) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: error.message
+            });
+        }
+
+
+        const order = await Repository.GetOrderById({
+            order_id: order_id,
+        });
+
+        if (!order) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Order not found"
+            });
+        }
+
+        if (order.vendor_id !== vendor_id) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Vendor not access this order"
+            });
+        }
+
+        const order_report = await Repository.CreateOrderReport({
+            values: {
+                ...value,
+                order_id: order_id,
+            },
+        });
+
+        if (!order_report) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: 'Create Order Report Failed',
+            });
+        }
+
+        ResponseSuccess(res, {
+            message: 'Create Order Report Success',
+            data: order_report
         });
 
     } catch (error) {

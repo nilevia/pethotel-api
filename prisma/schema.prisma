@@ -96,10 +96,10 @@ model room {
 }
 
 model order {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  user_id        String   @db.ObjectId
-  vendor_id      String   @db.ObjectId
-  room_id        String   @db.ObjectId
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  user_id        String         @db.ObjectId
+  vendor_id      String         @db.ObjectId
+  room_id        String         @db.ObjectId
   start_date     DateTime
   end_date       DateTime
   room_name      String
@@ -107,22 +107,23 @@ model order {
   total_price    Int
   total_pet      Int
   service_fee    Int
-  payment_status Int      @default(0)
-  order_status   Int      @default(0)
+  payment_status Int            @default(0)
+  order_status   Int            @default(0)
   notes          String
   expired_at     DateTime
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
   // relation
-  animals        animal[]
-  user           user     @relation(fields: [user_id], references: [id])
-  vendor         vendor   @relation(fields: [vendor_id], references: [id])
-  room           room     @relation(fields: [room_id], references: [id])
+  animals        order_animal[]
+  reports        order_report[]
+  user           user           @relation(fields: [user_id], references: [id])
+  vendor         vendor         @relation(fields: [vendor_id], references: [id])
+  room           room           @relation(fields: [room_id], references: [id])
 
   @@index([user_id, vendor_id])
 }
 
-model animal {
+model order_animal {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   order_id   String   @db.ObjectId
   kind       String
@@ -137,18 +138,23 @@ model animal {
   @@index([order_id])
 }
 
+model order_report {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  order_id   String   @db.ObjectId
+  image      String
+  desc       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  // relation
+  order      order    @relation(fields: [order_id], references: [id])
+
+  @@index([order_id])
+}
+
 model city {
   id         String   @id @map("_id")
   name       String   @unique
   status     Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model config {
-  id         String   @id @map("_id")
-  field      String   @unique
-  value      String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

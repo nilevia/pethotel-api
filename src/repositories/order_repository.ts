@@ -19,7 +19,8 @@ export type Order = {
     payment_status: number,
     order_status: number,
     notes: string,
-    animals?: Animal[],
+    animals?: OrderAnimal[],
+    reports?: OrderReport[],
     vendor?: Vendor,
     user?: User,
     room?: Room,
@@ -29,13 +30,23 @@ export type Order = {
 }
 
 
-export type Animal = {
+export type OrderAnimal = {
     id?: string,
     order_id?: string | null,
     kind: string,
     name: string,
     age: string,
     color: string,
+    order?: Order | null,
+    created_at?: Date | undefined,
+    updated_at?: Date | undefined,
+}
+
+export type OrderReport = {
+    id?: string,
+    order_id?: string | null,
+    image: string ,
+    desc: string,
     order?: Order | null,
     created_at?: Date | undefined,
     updated_at?: Date | undefined,
@@ -87,6 +98,7 @@ export type GetOrderByIdParams = {
     vendor?: boolean,
     room?: boolean,
     animals?: boolean,
+    reports?: boolean,
 }
 
 export const GetOrderById = async (params: GetOrderByIdParams): Promise<Order | null> => {
@@ -101,6 +113,7 @@ export const GetOrderById = async (params: GetOrderByIdParams): Promise<Order | 
                 room: params.room ?? false,
                 user: params.user ?? false,
                 vendor: params.vendor ?? false,
+                reports: params.reports ?? false,
             }
         });
 
@@ -167,11 +180,11 @@ export const CreateOrder = async (params: CreateOrderParams): Promise<Order | nu
                 },
             });
 
-            const animals: Animal[] = []
+            const animals: OrderAnimal[] = []
 
             if ((params.values?.animals ?? []).length > 0) {
                 for (const animal of params.values?.animals ?? []) {
-                    const res = await tx.animal.create({
+                    const res = await tx.order_animal.create({
                         data: {
                             order_id: order.id,
                             kind: animal.kind,
@@ -193,6 +206,29 @@ export const CreateOrder = async (params: CreateOrderParams): Promise<Order | nu
         })
 
         return order;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export type CreateOrderReportParams = {
+    values: OrderReport,
+}
+
+export const CreateOrderReport = async (params: CreateOrderReportParams): Promise<OrderReport | null> => {
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            const order_report = await tx.order_report.create({
+                data: {
+                    order_id:  params.values!.order_id!,
+                    image: params.values.image,
+                    desc: params.values.desc,
+                },
+            });
+
+            return order_report;
+        })
+        return result;
     } catch (error) {
         throw error;
     }

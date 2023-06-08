@@ -1,6 +1,5 @@
 import prisma, {validate} from "../prisma";
 import {Room} from "./room_repository";
-import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
 
 export type Vendor = {
     id?: string,
