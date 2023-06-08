@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "concurrently \"npm run prisma\" \"npx tsc\"",
+    "build": "npm run prisma && npx tsc",
     "prisma": "npx prisma generate",
     "start": "node dist/index.js",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/index.js\""
