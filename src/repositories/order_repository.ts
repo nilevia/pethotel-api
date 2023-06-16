@@ -33,11 +33,15 @@ export type Order = {
 export type OrderAnimal = {
     id?: string,
     order_id?: string | null,
+    user_id?: string | null,
+    vendor_id?: string | null,
     kind: string,
     name: string,
     age: string,
     color: string,
     order?: Order | null,
+    user?: User | null,
+    vendor?: Vendor | null,
     created_at?: Date | undefined,
     updated_at?: Date | undefined,
 }
@@ -45,9 +49,13 @@ export type OrderAnimal = {
 export type OrderReport = {
     id?: string,
     order_id?: string | null,
-    image: string ,
-    desc: string,
+    user_id?: string | null,
+    vendor_id?: string | null,
+    image: string,
+    description: string,
     order?: Order | null,
+    user?: User | null,
+    vendor?: Vendor | null,
     created_at?: Date | undefined,
     updated_at?: Date | undefined,
 }
@@ -186,6 +194,8 @@ export const CreateOrder = async (params: CreateOrderParams): Promise<Order | nu
                 for (const animal of params.values?.animals ?? []) {
                     const res = await tx.order_animal.create({
                         data: {
+                            user_id: animal.user_id!,
+                            vendor_id: animal.vendor_id!,
                             order_id: order.id,
                             kind: animal.kind,
                             name: animal.name,
@@ -220,19 +230,43 @@ export const CreateOrderReport = async (params: CreateOrderReportParams): Promis
         const result = await prisma.$transaction(async (tx) => {
             const order_report = await tx.order_report.create({
                 data: {
-                    order_id:  params.values!.order_id!,
+                    user_id: params.values.user_id!,
+                    vendor_id: params.values.vendor_id!,
+                    order_id: params.values!.order_id!,
                     image: params.values.image,
-                    desc: params.values.desc,
+                    description: params.values.description,
                 },
             });
 
             return order_report;
-        })
+        });
         return result;
     } catch (error) {
         throw error;
     }
 }
+
+export type GetOrderReportParams = {
+    report_id: string,
+}
+
+export const GetOrderReport = async (params: GetOrderReportParams): Promise<OrderReport | null> => {
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+            const order_report = await tx.order_report.findFirst({
+                where: {
+                    id: params.report_id,
+                },
+            });
+
+            return order_report;
+        });
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
 
 
 

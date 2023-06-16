@@ -342,6 +342,8 @@ export const createOrderReport = async (req: RequestWithAuthentication, res: Res
             values: {
                 ...value,
                 order_id: order_id,
+                vendor_id: vendor_id,
+                user_id: order.user_id,
             },
         });
 
@@ -361,4 +363,3 @@ export const createOrderReport = async (req: RequestWithAuthentication, res: Res
         next(error);
     }
 }
-

@@ -20,14 +20,16 @@ model authentication {
 }
 
 model user {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  name       String
-  email      String   @unique
-  phone      String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String         @unique
+  phone         String?
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
   // relation
-  order      order[]
+  order         order[]
+  order_reports order_report[]
+  order_animals order_animal[]
 }
 
 model admin {
@@ -40,30 +42,32 @@ model admin {
 }
 
 model vendor {
-  id           String          @id @default(auto()) @map("_id") @db.ObjectId
-  email        String          @unique
-  password     String
-  salt         String
-  saldo        Int             @default(0)
-  name         String
-  image        String?
-  images       vendor_images[]
-  city         String?
-  district     String?
-  phone        String?
-  description  String?
-  rating       Float?
-  rating_count Int?
-  price        Float?
-  status       Boolean?        @default(true)
-  address      String?
-  lat          Float?
-  lon          Float?
-  created_at   DateTime        @default(now())
-  updated_at   DateTime        @updatedAt
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  email         String          @unique
+  password      String
+  salt          String
+  saldo         Int             @default(0)
+  name          String
+  image         String?
+  images        vendor_images[]
+  city          String?
+  district      String?
+  phone         String?
+  description   String?
+  rating        Float?
+  rating_count  Int?
+  price         Float?
+  status        Boolean?        @default(true)
+  address       String?
+  lat           Float?
+  lon           Float?
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
   // relation
-  rooms        room[]
-  order        order[]
+  rooms         room[]
+  order         order[]
+  order_reports order_report[]
+  order_animals order_animal[]
 }
 
 model vendor_images {
@@ -126,6 +130,8 @@ model order {
 model order_animal {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   order_id   String   @db.ObjectId
+  user_id    String   @db.ObjectId
+  vendor_id  String   @db.ObjectId
   kind       String
   name       String
   age        String
@@ -134,19 +140,25 @@ model order_animal {
   updated_at DateTime @updatedAt
   // relation
   order      order    @relation(fields: [order_id], references: [id])
+  user       user     @relation(fields: [user_id], references: [id])
+  vendor     vendor   @relation(fields: [vendor_id], references: [id])
 
   @@index([order_id])
 }
 
 model order_report {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  order_id   String   @db.ObjectId
-  image      String
-  desc       String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  order_id    String   @db.ObjectId
+  user_id     String   @db.ObjectId
+  vendor_id   String   @db.ObjectId
+  image       String
+  description String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
   // relation
-  order      order    @relation(fields: [order_id], references: [id])
+  order       order    @relation(fields: [order_id], references: [id])
+  user        user     @relation(fields: [user_id], references: [id])
+  vendor      vendor   @relation(fields: [vendor_id], references: [id])
 
   @@index([order_id])
 }
