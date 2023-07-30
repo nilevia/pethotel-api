@@ -1,5 +1,5 @@
 import prisma, {validate} from "../prisma";
-import {Vendor} from "./vendor_repository";
+import {Vendor} from "./vendor.service";
 
 
 export type Room = {

@@ -1,10 +1,10 @@
 import {NextFunction, Request, Response} from "express";
 import fileUpload from "express-fileupload";
 import * as path from "path";
-import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
+import {BaseError, BaseErrorArgsName} from "../helpers/base_error";
 
 import * as process from "process";
-import {ResponseSuccess} from "../exceptions/response";
+import {ResponseSuccess} from "../helpers/response";
 
 export const dirPublic: string = 'public'
 export const dirUploads: string = 'uploads'

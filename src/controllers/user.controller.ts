@@ -1,9 +1,9 @@
 import {NextFunction, Request, Response} from "express";
-import * as Repository from "../repositories/user_repository";
-import {RequestWithAuthentication} from "../middlewares";
+import * as Repository from "../services/user.service";
+import {RequestWithAuthentication} from "../middlewares/authentication.middleware";
 import {isFloat, isString, Validator} from "../helpers/validator";
-import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {ResponseSuccess} from "../exceptions/response";
+import {BaseError, BaseErrorArgsName} from "../helpers/base_error";
+import {ResponseSuccess} from "../helpers/response";
 import Joi from "joi";
 import {exclude} from "../prisma";
 

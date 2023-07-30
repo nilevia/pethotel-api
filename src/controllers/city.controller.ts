@@ -1,11 +1,41 @@
-import {NextFunction, Request, Response} from "express";
-import * as Repository from "../repositories/city_repository";
-import {RequestWithAuthentication} from "../middlewares";
-import {isBoolean, isFloat, isString, Validator} from "../helpers/validator";
-import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {ResponseSuccess} from "../exceptions/response";
+import {NextFunction, Response} from "express";
 import Joi from "joi";
+import * as Service from "../services/";
+import {RequestWithAuthentication} from "../middlewares/authentication.middleware";
+import {BaseError, BaseErrorArgsName, ResponseSuccess} from "../helpers";
 
+import {City} from "../models";
+
+export const getCities = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const data: City[] = await Service.GetCities({});
+        ResponseSuccess(res, {data, message: "Get List City Success"});
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getCityById = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
+    const city_id: string = req.params.city_id;
+    if (!city_id) {
+        throw new BaseError({
+            name: BaseErrorArgsName.ValidationError,
+            message: 'params id required'
+        });
+    }
+    try {
+        const city: City | null = await Service.GetCityById({city_id});
+        if (!city) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: 'City Not Found'
+            });
+        }
+        ResponseSuccess(res, {data: city, message: "Get City Success"});
+    } catch (error) {
+        next(error);
+    }
+}
 
 export const createCity = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -23,7 +53,7 @@ export const createCity = async (req: RequestWithAuthentication, res: Response, 
             });
         }
 
-        const isExisting = await Repository.getCityById(value.id);
+        const isExisting = await Service.GetCityById(value.id);
         if (isExisting != null) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
@@ -32,7 +62,7 @@ export const createCity = async (req: RequestWithAuthentication, res: Response, 
         }
 
 
-        const data = await Repository.createCity(value);
+        const data = await Service.CreateCity(value);
         if (!data) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
@@ -48,14 +78,15 @@ export const createCity = async (req: RequestWithAuthentication, res: Response, 
 
 export const updateCityById = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-        if (!req.params.id) {
+        const city_id: string = req.params.city_id;
+        if (!city_id) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
                 message: 'params id required'
             });
         }
 
-        const city = await Repository.getCityById(req.params.id);
+        const city = await Service.GetCityById({city_id});
         if (!city) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
@@ -78,7 +109,7 @@ export const updateCityById = async (req: RequestWithAuthentication, res: Respon
         }
 
         if (value.id != req.params.id) {
-            const isExisting = await Repository.getCityById(value.id);
+            const isExisting = await Service.GetCityById(value.id);
             if (isExisting != null) {
                 throw new BaseError({
                     name: BaseErrorArgsName.ValidationError,
@@ -87,7 +118,7 @@ export const updateCityById = async (req: RequestWithAuthentication, res: Respon
             }
         }
 
-        const data = await Repository.updateCityById(req.params.id, value);
+        const data = await Service.UpdateCityById({city_id, data: value});
         if (!data) {
             throw new BaseError({
                 name: BaseErrorArgsName.ValidationError,
@@ -101,29 +132,3 @@ export const updateCityById = async (req: RequestWithAuthentication, res: Respon
     }
 }
 
-export const getListCity = async (req: RequestWithAuthentication, res: Response, next: NextFunction) => {
-    try {
-        const data = await Repository.getListCity();
-        ResponseSuccess(res, {data, message: "Get List City Success"});
-    } catch (error) {
-        next(error);
-    }
-}
-
-export const getCityById = async (req: RequestWithAuthentication, res: Response, next: NextFunction) => {
-    try {
-        const data = await Repository.getCityById(req.params.id);
-        ResponseSuccess(res, {data, message: "Get City Success"});
-    } catch (error) {
-        next(error);
-    }
-}
-
-export const deleteCityById = async (req: RequestWithAuthentication, res: Response, next: NextFunction) => {
-    try {
-        const data = await Repository.deleteCityById(req.params.id);
-        ResponseSuccess(res, {data, message: "Get City Success"});
-    } catch (error) {
-        next(error);
-    }
-}

@@ -1,10 +1,9 @@
 import {NextFunction, Request, Response} from 'express';
-import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import * as VendorRepository from "../repositories/vendor_repository";
-import * as UserRepository from "../repositories/user_repository";
-import {Authentication, getAuthenticationByToken} from "../repositories/authentication_repository";
-import * as AdminRepository from "../repositories/admin_repository";
-import * as console from "console";
+import {BaseError, BaseErrorArgsName} from "../helpers/base_error";
+import * as VendorRepository from "../services/vendor.service";
+import * as UserRepository from "../services/user.service";
+import {Authentication, getAuthenticationByToken} from "../services/authentication.service";
+import * as AdminRepository from "../services/admin.service";
 
 
 export interface RequestWithAuthentication extends Request {

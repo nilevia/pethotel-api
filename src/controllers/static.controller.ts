@@ -1,7 +1,7 @@
 import {NextFunction, Response} from "express";
-import * as Repository from "../repositories/static_repository";
-import {RequestWithAuthentication} from "../middlewares";
-import {ResponseSuccess} from "../exceptions/response";
+import * as Repository from "../services/static.service";
+import {RequestWithAuthentication} from "../middlewares/authentication.middleware";
+import {ResponseSuccess} from "../helpers/response";
 
 export const getCitys = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {

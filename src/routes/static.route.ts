@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
-import * as Controller from '../controllers/static_controller';
-import {isAuthenticatedAll} from "../middlewares";
+import * as Controller from '../controllers/static.controller';
+import {isAuthenticatedAll} from "../middlewares/authentication.middleware";
 
 export default class StaticRouter {
     private router: Router;

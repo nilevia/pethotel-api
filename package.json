@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^4.15.0",
+    "@prisma/client": "^5.0.0",
     "bson": "^5.3.0",
     "bson-objectid": "^2.0.4",
     "compression": "^1.7.4",
@@ -41,7 +41,7 @@
     "@types/node-static": "^0.7.7",
     "concurrently": "^8.1.0",
     "nodemon": "^2.0.22",
-    "prisma": "^4.15.0",
+    "prisma": "^5.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
   }

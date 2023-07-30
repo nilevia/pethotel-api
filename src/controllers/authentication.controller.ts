@@ -1,13 +1,13 @@
 import {NextFunction, Request, Response} from 'express';
-import {verifyJWT, random} from "../helpers";
-import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {AUTHENTICATION, AuthenticationRole} from "../middlewares";
-import * as VendorRepository from "../repositories/vendor_repository";
-import * as AuthenticationRepository from "../repositories/authentication_repository";
-import * as UserRepository from "../repositories/user_repository";
-import * as AdminRepository from "../repositories/admin_repository";
+import {verifyJWT, random} from "../helpers/generate";
+import {BaseError, BaseErrorArgsName} from "../helpers/base_error";
+import {AUTHENTICATION, AuthenticationRole} from "../middlewares/authentication.middleware";
+import * as VendorRepository from "../services/vendor.service";
+import * as AuthenticationRepository from "../services/authentication.service";
+import * as UserRepository from "../services/user.service";
+import * as AdminRepository from "../services/admin.service";
 import {Validator} from "../helpers/validator";
-import {ResponseSuccess} from "../exceptions/response";
+import {ResponseSuccess} from "../helpers/response";
 import {exclude} from "../prisma";
 
 export default class AuthenticationController {

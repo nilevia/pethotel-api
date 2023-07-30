@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
-import * as Controller from '../controllers/order_controller';
-import {isAuthenticated, isAuthenticatedAll} from "../middlewares";
+import * as Controller from '../controllers/order.controller';
+import {isAuthenticated, isAuthenticatedAll} from "../middlewares/authentication.middleware";
 
 export default class OrderRouter {
     private router: Router;

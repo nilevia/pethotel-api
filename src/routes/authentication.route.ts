@@ -1,6 +1,6 @@
 import {Router} from 'express';
 
-import AuthenticationController from '../controllers/authentication_controller';
+import AuthenticationController from '../controllers/authentication.controller';
 
 export default class AuthenticationRouter {
     private router: Router;

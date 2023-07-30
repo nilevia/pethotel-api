@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
-import * as Controller from '../controllers/room_controller';
-import { isAuthenticatedAll, isAuthenticatedVendor} from "../middlewares";
+import * as Controller from '../controllers/room.controller';
+import { isAuthenticatedAll, isAuthenticatedVendor} from "../middlewares/authentication.middleware";
 
 
 export default class RoomRouter {

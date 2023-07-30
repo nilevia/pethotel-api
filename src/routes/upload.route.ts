@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
-import * as UploadController from '../controllers/upload_controller';
-import {isAuthenticatedAll} from "../middlewares";
+import * as UploadController from '../controllers/upload.controller';
+import {isAuthenticatedAll} from "../middlewares/authentication.middleware";
 import fileUpload from "express-fileupload";
 
 export default class UploadRouter {

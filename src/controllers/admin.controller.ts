@@ -1,7 +1,7 @@
 import {NextFunction, Request, Response} from "express";
-import * as Repository from "../repositories/admin_repository";
-import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {ResponseSuccess} from "../exceptions/response";
+import * as Repository from "../services/admin.service";
+import {BaseError, BaseErrorArgsName} from "../helpers/base_error";
+import {ResponseSuccess} from "../helpers/response";
 
 
 export const getAdmins = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
-import * as Controller from '../controllers/admin_controller';
-import { isAuthenticatedAdmin} from "../middlewares";
+import * as Controller from '../controllers/admin.controller';
+import { isAuthenticatedAdmin} from "../middlewares/authentication.middleware";
 
 export default class AdminRouter {
     private router: Router;

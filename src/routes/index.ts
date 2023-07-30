@@ -1,12 +1,12 @@
 import express from 'express';
-import AuthenticationRouter from "./authentication_router";
-import VendorRouter from "./vendor_router";
-import UploadRouter from "./upload_router";
-import UserRouter from "./user_router";
-import CityRouter from "./city_router";
-import HotelRouter from "./hotel_router";
-import OrderRouter from "./order_router";
-import RoomRouter from "./room_router";
+import AuthenticationRouter from "./authentication.route";
+import VendorRouter from "./vendor.route";
+import UploadRouter from "./upload.route";
+import UserRouter from "./user.route";
+import CityRouter from "./city.route";
+import HotelRouter from "./hotel.route";
+import OrderRouter from "./order.route";
+import RoomRouter from "./room.route";
 
 export default class Router {
     public readonly router: express.Router;

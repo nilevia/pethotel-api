@@ -1,10 +1,10 @@
 import {NextFunction, Response} from "express";
-import * as Repository from "../repositories/order_repository";
-import * as VendorRepository from "../repositories/vendor_repository";
-import * as RoomRepository from "../repositories/room_repository";
-import {ResponseSuccess} from "../exceptions/response";
-import {BaseError, BaseErrorArgsName} from "../exceptions/base_error";
-import {AuthenticationRole, RequestWithAuthentication} from "../middlewares";
+import * as Repository from "../services/order.service";
+import * as VendorRepository from "../services/vendor.service";
+import * as RoomRepository from "../services/room.service";
+import {ResponseSuccess} from "../helpers/response";
+import {BaseError, BaseErrorArgsName} from "../helpers/base_error";
+import {AuthenticationRole, RequestWithAuthentication} from "../middlewares/authentication.middleware";
 import {validate} from "../prisma";
 import Joi from 'joi';
 import moment from "moment";

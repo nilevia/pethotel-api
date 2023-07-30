@@ -1,7 +1,7 @@
 import prisma, {id, validate} from "../prisma";
-import {Room} from "./room_repository";
-import {Vendor, Vendor_Images} from "./vendor_repository";
-import {User} from "./user_repository";
+import {Room} from "./room.service";
+import {Vendor, Vendor_Images} from "./vendor.service";
+import {User} from "./user.service";
 
 
 export type Order = {

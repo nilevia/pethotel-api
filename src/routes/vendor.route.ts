@@ -1,7 +1,7 @@
 import {Router} from 'express';
 
-import * as VendorController from '../controllers/vendor_controller';
-import {isAuthenticatedVendor} from "../middlewares";
+import * as VendorController from '../controllers/vendor.controller';
+import {isAuthenticatedVendor} from "../middlewares/authentication.middleware";
 
 export default class VendorRouter {
     private router: Router;
