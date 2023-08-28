@@ -95,7 +95,7 @@ export const updateCityById = async (req: RequestWithAuthentication, res: Respon
         }
 
         const schema = Joi.object({
-            id: Joi.string().required(),
+            // id: Joi.string().required(),
             name: Joi.string().required(),
             status: Joi.boolean(),
         })
@@ -108,15 +108,16 @@ export const updateCityById = async (req: RequestWithAuthentication, res: Respon
             });
         }
 
-        if (value.id != req.params.id) {
-            const isExisting = await Service.GetCityById(value.id);
-            if (isExisting != null) {
-                throw new BaseError({
-                    name: BaseErrorArgsName.ValidationError,
-                    message: 'Id City sudah digunakan'
-                });
-            }
-        }
+        // isExisting
+        // if (value.id != city_id) {
+        //     const isExisting = await Service.GetCityById(value.id);
+        //     if (isExisting != null) {
+        //         throw new BaseError({
+        //             name: BaseErrorArgsName.ValidationError,
+        //             message: 'Id City sudah digunakan'
+        //         });
+        //     }
+        // }
 
         const data = await Service.UpdateCityById({city_id, data: value});
         if (!data) {

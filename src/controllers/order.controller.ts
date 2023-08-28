@@ -8,10 +8,11 @@ import {AuthenticationRole, RequestWithAuthentication} from "../middlewares/auth
 import {validate} from "../prisma";
 import Joi from 'joi';
 import moment from "moment";
+import {CreateReport, GetReports, Report} from "../services/report.service";
+import {Order} from "../services/order.service";
 
 export const getOrders = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
     try {
-
         const orders = await Repository.GetOrders({vendor: true});
 
         const data = orders.map((e) => {
@@ -58,7 +59,8 @@ export const getOrderById = async (req: RequestWithAuthentication, res: Response
 
         const order = await Repository.GetOrderById(
             {
-                order_id: order_id
+                order_id: order_id,
+                vendor: true,
             }
         );
 
@@ -69,9 +71,29 @@ export const getOrderById = async (req: RequestWithAuthentication, res: Response
             });
         }
 
+        const data: any = {
+            id: order.id,
+            date_start: order.start_date,
+            date_end: order.end_date,
+            vendor: {
+                id: order.vendor?.id,
+                image: order.vendor?.image,
+                city: order.vendor?.city,
+                district: order.vendor?.district,
+                name: order.vendor?.name,
+            },
+            room_name: order.room_name,
+            initial_price: order.initial_price,
+            service_fee: order.service_fee,
+            total_price: order.total_price,
+            total_pet: order.total_pet,
+            payment_status: order.payment_status,
+            order_status: order.order_status,
+        }
+
         ResponseSuccess(res, {
             message: 'Get Order Success',
-            data: order
+            data: data,
         });
     } catch (error) {
         next(error);
@@ -254,6 +276,152 @@ export const createOrder = async (req: RequestWithAuthentication, res: Response,
             data: order
         });
 
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const createOrderHotelReport = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        if (req.authentication?.ref_table !== AuthenticationRole.VENDOR) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Only Vendor can create order"
+            });
+        }
+
+        const vendor_id: string = req.authentication?.ref_id;
+
+        const order_id: string = req.params.order_id;
+        if (!order_id || !validate(order_id)) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: !order_id ? "Order Id is required" : "Order Id is not valid"
+            });
+        }
+
+        const order: Repository.Order | null = await Repository.GetOrderById(
+            {
+                order_id: order_id
+            }
+        );
+
+        if (!order) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Order Not Found"
+            });
+        }
+
+        if (vendor_id !== order.vendor_id) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: "Vendor not access this order"
+            });
+        }
+
+        const schema = Joi.object({
+            image: Joi.string().required(),
+            description: Joi.string().required(),
+        })
+
+        const {value, error} = schema.validate(req.body);
+
+        if (error) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: error.message
+            });
+        }
+
+        const report: Report | null = await CreateReport({
+            user_id: order.user_id,
+            vendor_id: order.vendor_id,
+            order_id: order_id,
+            image: value.image,
+            description: value.description,
+        });
+
+        if (!report) {
+            throw new BaseError({
+                name: BaseErrorArgsName.ValidationError,
+                message: 'Create Orders Hotel Report Failed',
+            });
+        }
+
+
+        ResponseSuccess(res, {
+            message: 'Create Orders Hotel Report Success',
+            data: report
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getOrderHotelReports = async (req: RequestWithAuthentication, res: Response, next: NextFunction): Promise<void> => {
+    try {
+
+        const reports: Report[] | null = await GetReports({
+            order_id: req.params.order_id,
+        });
+
+        if (!reports || reports.length === 0) {
+            ResponseSuccess(res, {
+                message: 'Get Orders Hotel Reports Success',
+                data: []
+            });
+            return;
+        }
+
+        let order_id: string | undefined;
+        let vendor_id: string | undefined;
+        let user_id: string | undefined;
+
+        const newReports: Report[] = reports?.map((e: Report) => {
+            order_id = e.order_id;
+            vendor_id = e.vendor_id;
+            user_id = e.user_id;
+            return {
+                id: e.id,
+                image: e.image,
+                description: e.description,
+                created_at: e.created_at,
+            }
+        })
+
+
+        if (req.authentication?.ref_table === AuthenticationRole.USER) {
+            if (user_id !== req.authentication?.ref_id) {
+                throw new BaseError({
+                    name: BaseErrorArgsName.ValidationError,
+                    message: "User not access this order"
+                });
+            }
+        }
+
+        if (req.authentication?.ref_table === AuthenticationRole.VENDOR) {
+            if (vendor_id !== req.authentication?.ref_id) {
+                throw new BaseError({
+                    name: BaseErrorArgsName.ValidationError,
+                    message: "Vendor not access this order"
+                });
+            }
+        }
+
+        const data = {
+            order_id: order_id,
+            vendor_id: vendor_id,
+            user_id: user_id,
+            reports: newReports,
+        }
+
+
+        ResponseSuccess(res, {
+            message: 'Get Orders Hotel Reports Success',
+            data: data
+        });
     } catch (error) {
         next(error);
     }

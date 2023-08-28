@@ -52,7 +52,10 @@ export const UpdateCityById = async (params: UpdateCityByIdParams): Promise<City
             where: {
                 id: params.city_id,
             },
-            data: params.data,
+            data: {
+                name: params.data.name,
+                status: params.data.status,
+            },
         })
     } catch (err) {
         throw err;

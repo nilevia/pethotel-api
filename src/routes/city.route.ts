@@ -12,8 +12,8 @@ export default class CityRouter {
         this.router = router;
 
         this.router.get(`${this.prefix}`, isAuthenticatedAll, this.controller.getCities);
-        this.router.get(`${this.prefix}/:id`, isAuthenticatedAll, this.controller.getCityById);
+        this.router.get(`${this.prefix}/:city_id`, isAuthenticatedAll, this.controller.getCityById);
         this.router.post(`${this.prefix}`, isAuthenticatedAdmin, this.controller.createCity);
-        this.router.patch(`${this.prefix}/:id`, isAuthenticatedAdmin, this.controller.updateCityById);
+        this.router.patch(`${this.prefix}/:city_id`, isAuthenticatedAdmin, this.controller.updateCityById);
     }
 }

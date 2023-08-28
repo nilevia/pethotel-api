@@ -118,6 +118,7 @@ model order {
   user           user     @relation(fields: [user_id], references: [id])
   vendor         vendor   @relation(fields: [vendor_id], references: [id])
   room           room     @relation(fields: [room_id], references: [id])
+  reports        report[]
 
   @@index([user_id, vendor_id])
 }
@@ -136,6 +137,36 @@ model animal {
 
   @@index([order_id])
 }
+
+model report {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  order_id    String   @db.ObjectId
+  user_id     String   @db.ObjectId
+  vendor_id   String   @db.ObjectId
+  image       String
+  description String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  // relation
+  order       order    @relation(fields: [order_id], references: [id])
+
+  @@index([order_id])
+}
+
+// model payment {
+//   id         String   @id @default(auto()) @map("_id") @db.ObjectId
+//   order_id   String   @unique @db.ObjectId
+//   user_id    String   @db.ObjectId
+//   vendor_id  String   @db.ObjectId
+//   status     Float
+//   expired_at DateTime
+//   amount     Float
+//   qris_image String
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+//   // relation
+//   order      order    @relation(fields: [order_id], references: [id])
+// }
 
 model city {
   id         String   @id @map("_id")

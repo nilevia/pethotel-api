@@ -1,7 +1,8 @@
-import prisma, {id, validate} from "../prisma";
+import prisma, {validate} from "../prisma";
 import {Room} from "./room.service";
-import {Vendor, Vendor_Images} from "./vendor.service";
+import {Vendor} from "./vendor.service";
 import {User} from "./user.service";
+import {Report} from "./report.service";
 
 
 export type Order = {
@@ -23,6 +24,7 @@ export type Order = {
     vendor?: Vendor,
     user?: User,
     room?: Room,
+    reports?: Report[],
     expired_at: Date,
     created_at?: Date | undefined,
     updated_at?: Date | undefined,
@@ -42,12 +44,15 @@ export type Animal = {
 }
 
 
+
+
 export type GetOrdersParams = {
     filter?: GetOrdersParamsFilter,
     vendor?: boolean,
     user?: boolean,
     room?: boolean,
     animals?: boolean
+    reports?: boolean
 }
 
 export type GetOrdersParamsFilter = {
@@ -64,11 +69,13 @@ export type GetOrdersParamsFilter = {
 export const GetOrders = async (params: GetOrdersParams): Promise<Order[]> => {
     try {
         const result = await prisma.order.findMany({
+
             include: {
                 vendor: params.vendor ?? false,
                 user: params.user ?? false,
                 room: params.room ?? false,
                 animals: params.animals ?? false,
+                reports: params.animals ?? false,
             }
         });
 
@@ -87,6 +94,7 @@ export type GetOrderByIdParams = {
     vendor?: boolean,
     room?: boolean,
     animals?: boolean,
+    reports?: boolean
 }
 
 export const GetOrderById = async (params: GetOrderByIdParams): Promise<Order | null> => {
@@ -101,6 +109,7 @@ export const GetOrderById = async (params: GetOrderByIdParams): Promise<Order | 
                 room: params.room ?? false,
                 user: params.user ?? false,
                 vendor: params.vendor ?? false,
+                reports: params.reports ?? false,
             }
         });
 
@@ -184,12 +193,10 @@ export const CreateOrder = async (params: CreateOrderParams): Promise<Order | nu
                 }
             }
 
-            const data = {
+            return {
                 ...order,
                 animals,
-            }
-
-            return data;
+            };
         })
 
         return order;
@@ -197,6 +204,7 @@ export const CreateOrder = async (params: CreateOrderParams): Promise<Order | nu
         throw error;
     }
 }
+
 
 
 
